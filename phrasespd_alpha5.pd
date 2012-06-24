@@ -1,0 +1,1176 @@
+#N canvas 57 0 351 554 10;
+#N canvas 194 12 814 543 phrases-editor-gui 1;
+#X obj 0 0 cnv 13 96 13 empty 0-0-editor-button 3. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 0 cnv 13 96 13 empty 0-1-editor-button 1. 144 19 127 1 5
+0 10 -147790 -174763 0;
+#X obj 200 0 cnv 13 96 13 empty 0-2-editor-button 1. 144 26 127 1 5
+0 10 -225813 -262144 0;
+#X obj 300 0 cnv 13 96 13 empty 0-3-editor-button 3. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 400 0 cnv 13 96 13 empty 0-4-editor-button 3. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 500 0 cnv 13 96 13 empty 0-5-editor-button 3. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 0 15 cnv 13 96 13 empty 1-0-editor-button 4. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 15 cnv 13 96 13 empty 1-1-editor-button 2. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 200 15 cnv 13 96 13 empty 1-2-editor-button 2. 144 28 127 1
+5 0 10 -225813 -262144 0;
+#X obj 300 15 cnv 13 96 13 empty 1-3-editor-button 4. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 400 15 cnv 13 96 13 empty 1-4-editor-button 4. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 500 15 cnv 13 96 13 empty 1-5-editor-button 4. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 0 30 cnv 13 96 13 empty 2-0-editor-button 1. -1 1 5 0 10 -195569
+-220534 0;
+#X obj 100 30 cnv 13 96 13 empty 2-1-editor-button 3. 144 19 127 1
+5 0 10 -207015 -220534 0;
+#X obj 200 30 cnv 13 96 13 empty 2-2-editor-button 3. 144 19 127 1
+5 0 10 -244011 -262144 0;
+#X obj 300 30 cnv 13 96 13 empty 2-3-editor-button 1. -1 1 5 0 10 -195569
+-220534 0;
+#X obj 400 30 cnv 13 96 13 empty 2-4-editor-button 1. -1 1 5 0 10 -195569
+-220534 0;
+#X obj 500 30 cnv 13 96 13 empty 2-5-editor-button 1. -1 1 5 0 10 -195569
+-220534 0;
+#X obj 0 45 cnv 13 96 13 empty 3-0-editor-button 2. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 45 cnv 13 96 13 empty 3-1-editor-button 4. 144 19 127 1
+5 0 10 -147790 -174763 0;
+#X obj 200 45 cnv 13 96 13 empty 3-2-editor-button 4. 144 21 127 1
+5 0 10 -225813 -262144 0;
+#X obj 300 45 cnv 13 96 13 empty 3-3-editor-button 2. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 400 45 cnv 13 96 13 empty 3-4-editor-button 2. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 500 45 cnv 13 96 13 empty 3-5-editor-button 2. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 0 60 cnv 13 96 13 empty 4-0-editor-button 3. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 60 cnv 13 96 13 empty 4-1-editor-button 5. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 200 60 cnv 13 96 13 empty 4-2-editor-button 5. 144 23 127 1
+5 0 10 -225813 -262144 0;
+#X obj 300 60 cnv 13 96 13 empty 4-3-editor-button 3. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 400 60 cnv 13 96 13 empty 4-4-editor-button 3. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 500 60 cnv 13 96 13 empty 4-5-editor-button 3. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 0 75 cnv 13 96 13 empty 5-0-editor-button 4. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 75 cnv 13 96 13 empty 5-1-editor-button 6. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 200 75 cnv 13 96 13 empty 5-2-editor-button 6. 144 24 127 1
+5 0 10 -225813 -262144 0;
+#X obj 300 75 cnv 13 96 13 empty 5-3-editor-button 4. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 400 75 cnv 13 96 13 empty 5-4-editor-button 4. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 500 75 cnv 13 96 13 empty 5-5-editor-button 4. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 0 90 cnv 13 96 13 empty 6-0-editor-button 1. -1 1 5 0 10 -195569
+-220534 0;
+#X obj 100 90 cnv 13 96 13 empty 6-1-editor-button 1. 144 19 127 1
+5 0 10 -147790 -174763 0;
+#X obj 200 90 cnv 13 96 13 empty 6-2-editor-button 1. 144 26 127 1
+5 0 10 -225813 -262144 0;
+#X obj 300 90 cnv 13 96 13 empty 6-3-editor-button 1. -1 1 5 0 10 -195569
+-220534 0;
+#X obj 400 90 cnv 13 96 13 empty 6-4-editor-button 1. -1 1 5 0 10 -195569
+-220534 0;
+#X obj 500 90 cnv 13 96 13 empty 6-5-editor-button 1. -1 1 5 0 10 -195569
+-220534 0;
+#X obj 0 105 cnv 13 96 13 empty 7-0-editor-button 2. -1 1 5 0 10 -174763
+-124834 0;
+#X obj 100 105 cnv 13 96 13 empty 7-1-editor-button 2. -1 1 5 0 10
+-174763 -124834 0;
+#X obj 200 105 cnv 13 96 13 empty 7-2-editor-button 2. 144 28 127 1
+5 0 10 -262144 -225813 0;
+#X obj 300 105 cnv 13 96 13 empty 7-3-editor-button 2. -1 1 5 0 10
+-174763 -124834 0;
+#X obj 400 105 cnv 13 96 13 empty 7-4-editor-button 2. -1 1 5 0 10
+-174763 -124834 0;
+#X obj 500 105 cnv 13 96 13 empty 7-5-editor-button 2. -1 1 5 0 10
+-174763 -124834 0;
+#X obj 0 120 cnv 13 96 13 empty 8-0-editor-button 3. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 120 cnv 13 96 13 empty 8-1-editor-button 3. 144 19 127 1
+5 0 10 -207015 -220534 0;
+#X obj 200 120 cnv 13 96 13 empty 8-2-editor-button 3. 144 19 127 1
+5 0 10 -244011 -262144 0;
+#X obj 300 120 cnv 13 96 13 empty 8-3-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 120 cnv 13 96 13 empty 8-4-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 120 cnv 13 96 13 empty 8-5-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 135 cnv 13 96 13 empty 9-0-editor-button 4. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 135 cnv 13 96 13 empty 9-1-editor-button 4. 144 19 127 1
+5 0 10 -147790 -174763 0;
+#X obj 200 135 cnv 13 96 13 empty 9-2-editor-button 4. 144 21 127 1
+5 0 10 -225813 -262144 0;
+#X obj 300 135 cnv 13 96 13 empty 9-3-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 135 cnv 13 96 13 empty 9-4-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 135 cnv 13 96 13 empty 9-5-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 150 cnv 13 96 13 empty 10-0-editor-button 1. -1 1 5 0 10 -195569
+-220534 0;
+#X obj 100 150 cnv 13 96 13 empty 10-1-editor-button 5. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 200 150 cnv 13 96 13 empty 10-2-editor-button 5. 144 23 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 150 cnv 13 96 13 empty 10-3-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 400 150 cnv 13 96 13 empty 10-4-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 500 150 cnv 13 96 13 empty 10-5-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 0 165 cnv 13 96 13 empty 11-0-editor-button 2. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 165 cnv 13 96 13 empty 11-1-editor-button 6. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 200 165 cnv 13 96 13 empty 11-2-editor-button 6. 144 24 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 165 cnv 13 96 13 empty 11-3-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 165 cnv 13 96 13 empty 11-4-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 165 cnv 13 96 13 empty 11-5-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 180 cnv 13 96 13 empty 12-0-editor-button 3. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 180 cnv 13 96 13 empty 12-1-editor-button 1. 144 19 127
+1 5 0 10 -147790 -174763 0;
+#X obj 200 180 cnv 13 96 13 empty 12-2-editor-button 1. 144 26 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 180 cnv 13 96 13 empty 12-3-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 180 cnv 13 96 13 empty 12-4-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 180 cnv 13 96 13 empty 12-5-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 195 cnv 13 96 13 empty 13-0-editor-button 4. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 195 cnv 13 96 13 empty 13-1-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 200 195 cnv 13 96 13 empty 13-2-editor-button 2. 144 28 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 195 cnv 13 96 13 empty 13-3-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 195 cnv 13 96 13 empty 13-4-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 195 cnv 13 96 13 empty 13-5-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 210 cnv 13 96 13 empty 14-0-editor-button 1. -1 1 5 0 10 -195569
+-220534 0;
+#X obj 100 210 cnv 13 96 13 empty 14-1-editor-button 3. 144 19 127
+1 5 0 10 -207015 -220534 0;
+#X obj 200 210 cnv 13 96 13 empty 14-2-editor-button 3. 144 19 127
+1 5 0 10 -244011 -262144 0;
+#X obj 300 210 cnv 13 96 13 empty 14-3-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 400 210 cnv 13 96 13 empty 14-4-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 500 210 cnv 13 96 13 empty 14-5-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 0 225 cnv 13 96 13 empty 15-0-editor-button 2. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 225 cnv 13 96 13 empty 15-1-editor-button 4. 144 19 127
+1 5 0 10 -147790 -174763 0;
+#X obj 200 225 cnv 13 96 13 empty 15-2-editor-button 4. 144 21 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 225 cnv 13 96 13 empty 15-3-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 225 cnv 13 96 13 empty 15-4-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 225 cnv 13 96 13 empty 15-5-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 240 cnv 13 96 13 empty 16-0-editor-button 3. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 240 cnv 13 96 13 empty 16-1-editor-button 5. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 200 240 cnv 13 96 13 empty 16-2-editor-button 5. 144 23 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 240 cnv 13 96 13 empty 16-3-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 240 cnv 13 96 13 empty 16-4-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 240 cnv 13 96 13 empty 16-5-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 255 cnv 13 96 13 empty 17-0-editor-button 4. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 255 cnv 13 96 13 empty 17-1-editor-button 6. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 200 255 cnv 13 96 13 empty 17-2-editor-button 6. 144 24 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 255 cnv 13 96 13 empty 17-3-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 255 cnv 13 96 13 empty 17-4-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 255 cnv 13 96 13 empty 17-5-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 270 cnv 13 96 13 empty 18-0-editor-button 1. -1 1 5 0 10 -195569
+-220534 0;
+#X obj 100 270 cnv 13 96 13 empty 18-1-editor-button 1. 144 19 127
+1 5 0 10 -147790 -174763 0;
+#X obj 200 270 cnv 13 96 13 empty 18-2-editor-button 1. 144 26 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 270 cnv 13 96 13 empty 18-3-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 400 270 cnv 13 96 13 empty 18-4-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 500 270 cnv 13 96 13 empty 18-5-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 0 285 cnv 13 96 13 empty 19-0-editor-button 2. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 285 cnv 13 96 13 empty 19-1-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 200 285 cnv 13 96 13 empty 19-2-editor-button 2. 144 28 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 285 cnv 13 96 13 empty 19-3-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 285 cnv 13 96 13 empty 19-4-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 285 cnv 13 96 13 empty 19-5-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 300 cnv 13 96 13 empty 20-0-editor-button 3. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 300 cnv 13 96 13 empty 20-1-editor-button 3. 144 19 127
+1 5 0 10 -207015 -220534 0;
+#X obj 200 300 cnv 13 96 13 empty 20-2-editor-button 3. 144 19 127
+1 5 0 10 -244011 -262144 0;
+#X obj 300 300 cnv 13 96 13 empty 20-3-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 300 cnv 13 96 13 empty 20-4-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 300 cnv 13 96 13 empty 20-5-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 315 cnv 13 96 13 empty 21-0-editor-button 4. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 315 cnv 13 96 13 empty 21-1-editor-button 4. 144 19 127
+1 5 0 10 -147790 -174763 0;
+#X obj 200 315 cnv 13 96 13 empty 21-2-editor-button 4. 144 21 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 315 cnv 13 96 13 empty 21-3-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 315 cnv 13 96 13 empty 21-4-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 315 cnv 13 96 13 empty 21-5-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 330 cnv 13 96 13 empty 22-0-editor-button 1. -1 1 5 0 10 -195569
+-220534 0;
+#X obj 100 330 cnv 13 96 13 empty 22-1-editor-button 5. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 200 330 cnv 13 96 13 empty 22-2-editor-button 5. 144 23 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 330 cnv 13 96 13 empty 22-3-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 400 330 cnv 13 96 13 empty 22-4-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 500 330 cnv 13 96 13 empty 22-5-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 0 345 cnv 13 96 13 empty 23-0-editor-button 2. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 345 cnv 13 96 13 empty 23-1-editor-button 6. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 200 345 cnv 13 96 13 empty 23-2-editor-button 6. 144 24 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 345 cnv 13 96 13 empty 23-3-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 345 cnv 13 96 13 empty 23-4-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 345 cnv 13 96 13 empty 23-5-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 360 cnv 13 96 13 empty 24-0-editor-button 3. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 360 cnv 13 96 13 empty 24-1-editor-button 1. 144 19 127
+1 5 0 10 -147790 -174763 0;
+#X obj 200 360 cnv 13 96 13 empty 24-2-editor-button 1. 144 26 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 360 cnv 13 96 13 empty 24-3-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 360 cnv 13 96 13 empty 24-4-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 360 cnv 13 96 13 empty 24-5-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 375 cnv 13 96 13 empty 25-0-editor-button 4. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 375 cnv 13 96 13 empty 25-1-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 200 375 cnv 13 96 13 empty 25-2-editor-button 2. 144 28 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 375 cnv 13 96 13 empty 25-3-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 375 cnv 13 96 13 empty 25-4-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 375 cnv 13 96 13 empty 25-5-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 390 cnv 13 96 13 empty 26-0-editor-button 1. -1 1 5 0 10 -195569
+-220534 0;
+#X obj 100 390 cnv 13 96 13 empty 26-1-editor-button 3. 144 19 127
+1 5 0 10 -207015 -220534 0;
+#X obj 200 390 cnv 13 96 13 empty 26-2-editor-button 3. 144 19 127
+1 5 0 10 -244011 -262144 0;
+#X obj 300 390 cnv 13 96 13 empty 26-3-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 400 390 cnv 13 96 13 empty 26-4-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 500 390 cnv 13 96 13 empty 26-5-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 0 405 cnv 13 96 13 empty 27-0-editor-button 2. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 405 cnv 13 96 13 empty 27-1-editor-button 4. 144 19 127
+1 5 0 10 -147790 -174763 0;
+#X obj 200 405 cnv 13 96 13 empty 27-2-editor-button 4. 144 21 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 405 cnv 13 96 13 empty 27-3-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 405 cnv 13 96 13 empty 27-4-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 405 cnv 13 96 13 empty 27-5-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 420 cnv 13 96 13 empty 28-0-editor-button 3. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 420 cnv 13 96 13 empty 28-1-editor-button 5. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 200 420 cnv 13 96 13 empty 28-2-editor-button 5. 144 23 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 420 cnv 13 96 13 empty 28-3-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 420 cnv 13 96 13 empty 28-4-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 420 cnv 13 96 13 empty 28-5-editor-button 3. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 435 cnv 13 96 13 empty 29-0-editor-button 4. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 435 cnv 13 96 13 empty 29-1-editor-button 6. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 200 435 cnv 13 96 13 empty 29-2-editor-button 6. 144 24 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 435 cnv 13 96 13 empty 29-3-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 435 cnv 13 96 13 empty 29-4-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 435 cnv 13 96 13 empty 29-5-editor-button 4. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 0 450 cnv 13 96 13 empty 30-0-editor-button 1. -1 1 5 0 10 -195569
+-220534 0;
+#X obj 100 450 cnv 13 96 13 empty 30-1-editor-button 1. 144 19 127
+1 5 0 10 -147790 -174763 0;
+#X obj 200 450 cnv 13 96 13 empty 30-2-editor-button 1. 144 26 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 450 cnv 13 96 13 empty 30-3-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 400 450 cnv 13 96 13 empty 30-4-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 500 450 cnv 13 96 13 empty 30-5-editor-button 1. -1 1 5 0 10
+-195569 -220534 0;
+#X obj 0 465 cnv 13 96 13 empty 31-0-editor-button 2. -1 1 5 0 10 -124834
+-174763 0;
+#X obj 100 465 cnv 13 96 13 empty 31-1-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 200 465 cnv 13 96 13 empty 31-2-editor-button 2. 144 28 127
+1 5 0 10 -225813 -262144 0;
+#X obj 300 465 cnv 13 96 13 empty 31-3-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 400 465 cnv 13 96 13 empty 31-4-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 500 465 cnv 13 96 13 empty 31-5-editor-button 2. -1 1 5 0 10
+-124834 -174763 0;
+#X obj 604 2 cnv 19 144 19 empty phrases-editor-toggle-button REC 1
+7 0 19 -225813 -262144 0;
+#X restore 22 469 pd phrases-editor-gui;
+#N canvas 101 22 782 395 phrases-gui-sender 0;
+#X msg 87 322 vis 1 \, clear;
+#X msg 388 52 obj \$1 \$2 cnv \$3 \$4 \$5 empty \$6-\$7-editor-button
+empty 20 12 0 14 -233017 -262144 0;
+#X obj 176 43 list trim;
+#X obj 176 20 r phrases-editor-gui-object;
+#X obj 11 20 r phrases-grid-gui-object;
+#X obj 11 43 list trim;
+#X obj 212 322 phrases-gui-generator;
+#X text 10 2 Receive GUI objects sent by phrases-gui-generator;
+#X obj 60 255 t b b;
+#X text 90 307 Clear old GUI;
+#X msg 388 20 obj \$1 \$2 cnv \$3 \$4 \$5 empty \$6-\$7-grid-button
+empty 20 12 0 14 -233017 -262144 0;
+#X obj 242 126 r phrases-grid-pixelsx;
+#X obj 253 145 r phrases-grid-pixelsy;
+#X obj 283 202 r phrases-editor-cellsx;
+#X obj 294 221 r phrases-editor-cellsy;
+#X obj 304 240 r phrases-editor-pixelsx;
+#X obj 314 259 r phrases-editor-pixelsy;
+#X obj 263 164 r phrases-grid-marginx;
+#X obj 273 183 r phrases-grid-marginy;
+#X obj 324 278 r phrases-editor-marginx;
+#X obj 335 297 r phrases-editor-marginy;
+#X text 386 3 Sent-object formats - for reference only;
+#X obj 222 88 r phrases-monome-x;
+#X obj 232 107 r phrases-monome-y;
+#X obj 60 232 r phrases-gui-bang;
+#X obj 11 361 s pd-phrases-grid-gui;
+#X obj 176 361 s pd-phrases-editor-gui;
+#X connect 0 0 25 0;
+#X connect 0 0 26 0;
+#X connect 2 0 26 0;
+#X connect 3 0 2 0;
+#X connect 4 0 5 0;
+#X connect 5 0 25 0;
+#X connect 8 0 6 0;
+#X connect 8 1 0 0;
+#X connect 11 0 6 3;
+#X connect 12 0 6 4;
+#X connect 13 0 6 7;
+#X connect 14 0 6 8;
+#X connect 15 0 6 9;
+#X connect 16 0 6 10;
+#X connect 17 0 6 5;
+#X connect 18 0 6 6;
+#X connect 19 0 6 11;
+#X connect 20 0 6 12;
+#X connect 22 0 6 1;
+#X connect 23 0 6 2;
+#X connect 24 0 8 0;
+#X restore 22 450 pd phrases-gui-sender;
+#N canvas 329 0 675 558 phrases-grid-gui 1;
+#X obj 0 0 cnv 64 64 64 empty 0-0-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 67 0 cnv 64 64 64 empty 0-1-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 134 0 cnv 64 64 64 empty 0-2-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 201 0 cnv 64 64 64 empty 0-3-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 268 0 cnv 64 64 64 empty 0-4-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 335 0 cnv 64 64 64 empty 0-5-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 402 0 cnv 64 64 64 empty 0-6-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 469 0 cnv 64 64 64 empty 0-7-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 0 67 cnv 64 64 64 empty 1-0-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 67 67 cnv 64 64 64 empty 1-1-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 134 67 cnv 64 64 64 empty 1-2-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 201 67 cnv 64 64 64 empty 1-3-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 268 67 cnv 64 64 64 empty 1-4-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 335 67 cnv 64 64 64 empty 1-5-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 402 67 cnv 64 64 64 empty 1-6-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 469 67 cnv 64 64 64 empty 1-7-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 0 134 cnv 64 64 64 empty 2-0-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 67 134 cnv 64 64 64 empty 2-1-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 134 134 cnv 64 64 64 empty 2-2-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 201 134 cnv 64 64 64 empty 2-3-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 268 134 cnv 64 64 64 empty 2-4-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 335 134 cnv 64 64 64 empty 2-5-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 402 134 cnv 64 64 64 empty 2-6-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 469 134 cnv 64 64 64 empty 2-7-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 0 201 cnv 64 64 64 empty 3-0-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 67 201 cnv 64 64 64 empty 3-1-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 134 201 cnv 64 64 64 empty 3-2-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 201 201 cnv 64 64 64 empty 3-3-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 268 201 cnv 64 64 64 empty 3-4-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 335 201 cnv 64 64 64 empty 3-5-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 402 201 cnv 64 64 64 empty 3-6-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 469 201 cnv 64 64 64 empty 3-7-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 0 268 cnv 64 64 64 empty 4-0-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 67 268 cnv 64 64 64 empty 4-1-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 134 268 cnv 64 64 64 empty 4-2-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 201 268 cnv 64 64 64 empty 4-3-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 268 268 cnv 64 64 64 empty 4-4-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 335 268 cnv 64 64 64 empty 4-5-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 402 268 cnv 64 64 64 empty 4-6-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 469 268 cnv 64 64 64 empty 4-7-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 0 335 cnv 64 64 64 empty 5-0-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 67 335 cnv 64 64 64 empty 5-1-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 134 335 cnv 64 64 64 empty 5-2-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 201 335 cnv 64 64 64 empty 5-3-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 268 335 cnv 64 64 64 empty 5-4-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 335 335 cnv 64 64 64 empty 5-5-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 402 335 cnv 64 64 64 empty 5-6-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 469 335 cnv 64 64 64 empty 5-7-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 0 402 cnv 64 64 64 empty 6-0-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 67 402 cnv 64 64 64 empty 6-1-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 134 402 cnv 64 64 64 empty 6-2-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 201 402 cnv 64 64 64 empty 6-3-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 268 402 cnv 64 64 64 empty 6-4-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 335 402 cnv 64 64 64 empty 6-5-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 402 402 cnv 64 64 64 empty 6-6-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 469 402 cnv 64 64 64 empty 6-7-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 0 469 cnv 64 64 64 empty 7-0-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 67 469 cnv 64 64 64 empty 7-1-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 134 469 cnv 64 64 64 empty 7-2-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 201 469 cnv 64 64 64 empty 7-3-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 268 469 cnv 64 64 64 empty 7-4-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 335 469 cnv 64 64 64 empty 7-5-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 402 469 cnv 64 64 64 empty 7-6-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 469 469 cnv 64 64 64 empty 7-7-grid-button empty 1 5 0 10 -233017
+-262144 0;
+#X obj 543 3 cnv 96 96 96 empty phrases-grid-gate-button empty 20 12
+0 14 -184532 -262144 0;
+#X restore 22 488 pd phrases-grid-gui;
+#N canvas 315 238 671 277 phrases-prefs 0;
+#X msg 116 75 8;
+#X msg 144 75 8;
+#X text 119 58 X --- Y;
+#X text 21 68 Monome size \; grid GUI cells;
+#X obj 252 60 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X obj 272 140 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 272 12 r phrases-prefs-bang;
+#X obj 116 96 s phrases-monome-x;
+#X obj 116 117 s phrases-monome-y;
+#X obj 463 12 r phrases-monome-x;
+#X obj 471 35 r phrases-monome-y;
+#X obj 463 122 *;
+#X text 118 138 BPM --- TPB --- GATE;
+#X msg 116 155 120;
+#X msg 216 155 16;
+#X obj 116 176 s phrases-bpm;
+#X obj 116 197 s phrases-tpb;
+#X obj 116 218 s phrases-gate;
+#X msg 166 155 4;
+#X obj 471 60 t b f;
+#X obj 463 85 i 1;
+#X obj 498 85 i 1;
+#X obj 463 147 s phrases-totalbuttons;
+#X obj 418 1 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X obj 418 252 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X text -25 153 Default tempo/gating / \; \; note: these change / \;
+if a song sets them;
+#X connect 0 0 7 0;
+#X connect 1 0 8 0;
+#X connect 4 0 1 0;
+#X connect 4 0 0 0;
+#X connect 5 0 13 0;
+#X connect 5 0 18 0;
+#X connect 5 0 14 0;
+#X connect 6 0 4 0;
+#X connect 6 0 5 0;
+#X connect 9 0 20 0;
+#X connect 10 0 19 0;
+#X connect 11 0 22 0;
+#X connect 13 0 15 0;
+#X connect 14 0 17 0;
+#X connect 18 0 16 0;
+#X connect 19 0 20 0;
+#X connect 19 1 21 0;
+#X connect 20 0 11 0;
+#X connect 21 0 11 1;
+#X connect 23 0 24 0;
+#X restore 22 393 pd phrases-prefs;
+#N canvas 65 2 922 512 phrases-gui-prefs 1;
+#X obj 295 12 r phrases-gui-prefs-bang;
+#X text 139 35 X --- Y;
+#X text 136 115 X --- Y;
+#X text 142 195 X --- Y;
+#X text 143 275 X --- Y;
+#X text 138 355 X --- Y;
+#X text 43 51 grid GUI size;
+#X text 25 131 grid GUI margins;
+#X text 31 291 editor GUI size;
+#X text 25 211 editor GUI cells;
+#X text 13 371 editor GUI margins;
+#X obj 295 117 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 295 197 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 295 277 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 295 357 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 134 73 s phrases-grid-pixelsx;
+#X obj 134 94 s phrases-grid-pixelsy;
+#X obj 134 153 s phrases-grid-marginx;
+#X obj 134 174 s phrases-grid-marginy;
+#X obj 134 233 s phrases-editor-cellsx;
+#X obj 134 254 s phrases-editor-cellsy;
+#X obj 134 313 s phrases-editor-pixelsx;
+#X obj 134 334 s phrases-editor-pixelsy;
+#X obj 134 393 s phrases-editor-marginx;
+#X obj 134 414 s phrases-editor-marginy;
+#X msg 134 132 3;
+#X msg 162 132 3;
+#X msg 134 52 540;
+#X msg 168 52 540;
+#X text 461 36 R -- G -- B;
+#X text 571 36 R -- G -- B;
+#X obj 295 37 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X obj 456 83 s phrases-gate-red1;
+#X obj 484 104 s phrases-gate-green1;
+#X obj 589 83 s phrases-gate-red2;
+#X obj 617 104 s phrases-gate-green2;
+#X text 461 146 R -- G -- B;
+#X text 571 146 R -- G -- B;
+#X obj 295 147 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X msg 484 162 10;
+#X msg 566 162 10;
+#X msg 594 162 20;
+#X msg 512 162 20;
+#X msg 622 162 230;
+#X obj 456 193 s phrases-grid-red1;
+#X obj 484 214 s phrases-grid-green1;
+#X obj 589 193 s phrases-grid-red2;
+#X obj 617 214 s phrases-grid-green2;
+#X obj 512 235 s phrases-grid-blue1;
+#X obj 645 235 s phrases-grid-blue2;
+#X obj 512 125 s phrases-gate-blue1;
+#X obj 645 125 s phrases-gate-blue2;
+#X text 461 319 R -- G -- B;
+#X text 571 319 R -- G -- B;
+#X obj 295 320 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 456 366 s phrases-editor-red1;
+#X obj 484 387 s phrases-editor-green1;
+#X obj 512 408 s phrases-editor-blue1;
+#X obj 521 429 s phrases-editor-red2;
+#X obj 549 450 s phrases-editor-green2;
+#X obj 577 471 s phrases-editor-blue2;
+#X obj 646 366 s phrases-editor-red3;
+#X obj 674 387 s phrases-editor-green3;
+#X obj 702 408 s phrases-editor-blue3;
+#X text 681 319 R -- G -- B;
+#X text 681 146 R -- G -- B;
+#X obj 676 256 s phrases-grid-red3;
+#X obj 704 277 s phrases-grid-green3;
+#X obj 732 298 s phrases-grid-blue3;
+#X msg 676 162 200;
+#X msg 704 162 200;
+#X msg 732 162 200;
+#X text 328 52 gating button colors \; 0-255;
+#X text 340 162 grid button colors \; 0-255;
+#X msg 456 162 230;
+#X msg 622 52 20;
+#X msg 566 52 230;
+#X msg 456 52 20;
+#X msg 512 52 230;
+#X msg 594 52 240;
+#X msg 175 212 32;
+#X msg 175 292 500;
+#X msg 484 52 240;
+#X msg 456 335 220;
+#X msg 622 335 220;
+#X text 791 319 R -- G -- B;
+#X msg 786 335 255;
+#X msg 814 335 255;
+#X msg 842 335 255;
+#X msg 732 335 200;
+#X text 370 335 editor colors \; 0-255;
+#X obj 716 429 s phrases-editor-red4;
+#X obj 744 450 s phrases-editor-green4;
+#X obj 772 471 s phrases-editor-blue4;
+#X msg 704 335 180;
+#X msg 676 335 180;
+#X msg 512 335 80;
+#X msg 566 335 80;
+#X msg 484 335 35;
+#X msg 594 335 35;
+#X msg 164 372 2;
+#X msg 134 372 4;
+#X msg 134 212 6;
+#X msg 134 292 600;
+#X connect 0 0 31 0;
+#X connect 11 0 25 0;
+#X connect 11 0 26 0;
+#X connect 11 0 38 0;
+#X connect 12 0 102 0;
+#X connect 12 0 80 0;
+#X connect 12 0 13 0;
+#X connect 13 0 103 0;
+#X connect 13 0 81 0;
+#X connect 13 0 54 0;
+#X connect 14 0 101 0;
+#X connect 14 0 100 0;
+#X connect 25 0 17 0;
+#X connect 26 0 18 0;
+#X connect 27 0 15 0;
+#X connect 28 0 16 0;
+#X connect 31 0 75 0;
+#X connect 31 0 79 0;
+#X connect 31 0 76 0;
+#X connect 31 0 78 0;
+#X connect 31 0 82 0;
+#X connect 31 0 77 0;
+#X connect 31 0 28 0;
+#X connect 31 0 27 0;
+#X connect 31 0 11 0;
+#X connect 38 0 43 0;
+#X connect 38 0 41 0;
+#X connect 38 0 40 0;
+#X connect 38 0 42 0;
+#X connect 38 0 39 0;
+#X connect 38 0 12 0;
+#X connect 38 0 69 0;
+#X connect 38 0 70 0;
+#X connect 38 0 71 0;
+#X connect 38 0 74 0;
+#X connect 39 0 45 0;
+#X connect 40 0 46 0;
+#X connect 41 0 47 0;
+#X connect 42 0 48 0;
+#X connect 43 0 49 0;
+#X connect 54 0 99 0;
+#X connect 54 0 97 0;
+#X connect 54 0 96 0;
+#X connect 54 0 98 0;
+#X connect 54 0 83 0;
+#X connect 54 0 95 0;
+#X connect 54 0 94 0;
+#X connect 54 0 89 0;
+#X connect 54 0 84 0;
+#X connect 54 0 14 0;
+#X connect 54 0 86 0;
+#X connect 54 0 87 0;
+#X connect 54 0 88 0;
+#X connect 69 0 66 0;
+#X connect 70 0 67 0;
+#X connect 71 0 68 0;
+#X connect 74 0 44 0;
+#X connect 75 0 51 0;
+#X connect 76 0 34 0;
+#X connect 77 0 32 0;
+#X connect 78 0 50 0;
+#X connect 79 0 35 0;
+#X connect 80 0 20 0;
+#X connect 81 0 22 0;
+#X connect 82 0 33 0;
+#X connect 83 0 55 0;
+#X connect 84 0 60 0;
+#X connect 86 0 91 0;
+#X connect 87 0 92 0;
+#X connect 88 0 93 0;
+#X connect 89 0 63 0;
+#X connect 94 0 62 0;
+#X connect 95 0 61 0;
+#X connect 96 0 57 0;
+#X connect 97 0 58 0;
+#X connect 98 0 56 0;
+#X connect 99 0 59 0;
+#X connect 100 0 24 0;
+#X connect 101 0 23 0;
+#X connect 102 0 19 0;
+#X connect 103 0 21 0;
+#X restore 22 412 pd phrases-gui-prefs;
+#N canvas 328 89 406 362 phrases-bang-order 0;
+#X obj 64 24 loadbang;
+#X obj 111 127 s phrases-prefs-bang;
+#X obj 95 148 s phrases-gui-prefs-bang;
+#X obj 79 169 s phrases-gui-bang;
+#X obj 127 24 r phrases-newfile-bang;
+#X obj 64 83 t b b b b b;
+#X obj 127 106 s phrases-metro-stop-bang;
+#X obj 64 190 s phrases-metro-start-bang;
+#X msg 22 24 bang;
+#X connect 0 0 5 0;
+#X connect 4 0 5 0;
+#X connect 5 0 7 0;
+#X connect 5 1 3 0;
+#X connect 5 2 2 0;
+#X connect 5 3 1 0;
+#X connect 5 4 6 0;
+#X connect 8 0 5 0;
+#X restore 22 431 pd phrases-bang-order;
+#N canvas 58 0 518 531 phrases-tempo-generator 0;
+#X obj 56 254 metro;
+#X obj 83 136 /;
+#X obj 142 109 *;
+#X obj 56 278 bng 15 50 10 0 empty empty empty 0 -6 0 8 -258113 -228856
+-1;
+#X msg 83 109 60000;
+#X floatatom 83 166 7 0 0 1 - - -;
+#X obj 110 406 bng 15 200 50 0 empty empty empty 17 7 0 10 -4160 -257985
+-257985;
+#X obj 96 302 + 1;
+#X obj 83 352 moses;
+#X obj 110 379 t b b;
+#X text 129 165 ms between tempo ticks;
+#X floatatom 56 379 5 0 0 0 - - -;
+#X obj 56 352 mod;
+#X obj 83 77 t b f;
+#X obj 123 77 t b b f;
+#X obj 56 302 i 1;
+#X obj 56 325 t f f;
+#X obj 56 404 t b f;
+#X text 55 487 Send tempo ticks only after updating ticknum;
+#X obj 110 430 s phrases-gatebang;
+#X obj 56 472 s phrases-tempobang;
+#X obj 83 451 s phrases-ticknum;
+#X obj 83 25 r phrases-bpm;
+#X obj 123 53 r phrases-tpb;
+#X obj 110 325 r phrases-gate;
+#X obj 16 199 bng 15 250 50 0 empty phrases-metro-start-bang empty
+17 7 0 10 -262144 -1 -1;
+#X obj 106 199 bng 15 250 50 0 empty phrases-metro-stop-bang empty
+17 7 0 10 -262144 -1 -1;
+#X msg 56 227 stop;
+#X text 32 197 r start;
+#X text 122 197 r stop;
+#X text 218 269 1-indexing is necessary here;
+#X text 29 3 Generate properly spaced tempo ticks;
+#X text 159 355 Launch bangs on gate ticks. / \; NOTE: Gatebangs are
+sent before ticknum and tempobang \, / \; in order to allow timely
+updates of activity on / \; tick 0 \, and transference whenever.;
+#X msg 192 270 1;
+#X msg 106 270 0;
+#X connect 0 0 3 0;
+#X connect 1 0 5 0;
+#X connect 2 0 1 1;
+#X connect 3 0 15 0;
+#X connect 4 0 1 0;
+#X connect 5 0 0 1;
+#X connect 6 0 19 0;
+#X connect 7 0 15 1;
+#X connect 8 1 9 0;
+#X connect 9 0 6 0;
+#X connect 9 1 33 0;
+#X connect 11 0 17 0;
+#X connect 12 0 11 0;
+#X connect 13 0 4 0;
+#X connect 13 1 2 0;
+#X connect 14 0 4 0;
+#X connect 14 1 2 0;
+#X connect 14 2 2 1;
+#X connect 15 0 7 0;
+#X connect 15 0 16 0;
+#X connect 16 0 12 0;
+#X connect 16 1 8 0;
+#X connect 17 0 20 0;
+#X connect 17 1 21 0;
+#X connect 22 0 13 0;
+#X connect 23 0 14 0;
+#X connect 24 0 8 1;
+#X connect 24 0 12 1;
+#X connect 25 0 0 0;
+#X connect 26 0 27 0;
+#X connect 26 0 34 0;
+#X connect 27 0 0 0;
+#X connect 33 0 15 1;
+#X connect 34 0 15 1;
+#X restore 22 317 pd phrases-tempo-generator;
+#N canvas 446 235 450 300 phrases-file-loader 0;
+#X restore 22 278 pd phrases-file-loader;
+#N canvas 90 2 913 547 phrases-button-colorizer 1;
+#X obj 27 294 s phrases-grid-gate-button;
+#X obj 150 126 r phrases-gate-green1;
+#X obj 187 147 r phrases-gate-green2;
+#X obj 79 23 r phrases-gate;
+#X obj 27 46 r phrases-ticknum;
+#X obj 200 56 r phrases-gate-blue1;
+#X obj 237 77 r phrases-gate-blue2;
+#X obj 101 196 r phrases-gate-red1;
+#X obj 138 217 r phrases-gate-red2;
+#X obj 79 69 t f f f;
+#X obj 27 69 t f f f;
+#X obj 126 100 phrases-weighcolors;
+#X obj 76 170 phrases-weighcolors;
+#X obj 27 240 phrases-weighcolors;
+#X obj 389 13 r phrases-grid-red1;
+#X obj 417 32 r phrases-grid-green1;
+#X obj 446 51 r phrases-grid-blue1;
+#X obj 389 95 s phrases-grid-color1;
+#X obj 589 13 r phrases-grid-red2;
+#X obj 617 32 r phrases-grid-green2;
+#X obj 646 51 r phrases-grid-blue2;
+#X obj 589 95 s phrases-grid-color2;
+#X obj 389 123 r phrases-grid-red3;
+#X obj 417 142 r phrases-grid-green3;
+#X obj 446 161 r phrases-grid-blue3;
+#X obj 389 233 r phrases-editor-red1;
+#X obj 417 252 r phrases-editor-green1;
+#X obj 446 271 r phrases-editor-blue1;
+#X obj 389 205 s phrases-grid-color3;
+#X obj 389 315 s phrases-editor-color1;
+#X obj 599 233 r phrases-editor-red2;
+#X obj 627 252 r phrases-editor-green2;
+#X obj 656 271 r phrases-editor-blue2;
+#X obj 599 315 s phrases-editor-color2;
+#X obj 389 343 r phrases-editor-red3;
+#X obj 417 362 r phrases-editor-green3;
+#X obj 446 381 r phrases-editor-blue3;
+#X obj 389 425 s phrases-editor-color3;
+#X obj 27 267 phrases-makecolor;
+#X obj 599 343 r phrases-editor-red4;
+#X obj 627 362 r phrases-editor-green4;
+#X obj 656 381 r phrases-editor-blue4;
+#X obj 599 425 s phrases-editor-color4;
+#X obj 389 73 phrases-makecolor;
+#X obj 589 73 phrases-makecolor;
+#X obj 389 183 phrases-makecolor;
+#X obj 389 293 phrases-makecolor;
+#X obj 599 293 phrases-makecolor;
+#X obj 389 403 phrases-makecolor;
+#X obj 599 403 phrases-makecolor;
+#X connect 1 0 12 2;
+#X connect 2 0 12 3;
+#X connect 3 0 9 0;
+#X connect 4 0 10 0;
+#X connect 5 0 11 2;
+#X connect 6 0 11 3;
+#X connect 7 0 13 2;
+#X connect 8 0 13 3;
+#X connect 9 0 13 1;
+#X connect 9 1 12 1;
+#X connect 9 2 11 1;
+#X connect 10 0 13 0;
+#X connect 10 1 12 0;
+#X connect 10 2 11 0;
+#X connect 11 0 38 2;
+#X connect 12 0 38 1;
+#X connect 13 0 38 0;
+#X connect 14 0 43 0;
+#X connect 15 0 43 1;
+#X connect 16 0 43 2;
+#X connect 18 0 44 0;
+#X connect 19 0 44 1;
+#X connect 20 0 44 2;
+#X connect 22 0 45 0;
+#X connect 23 0 45 1;
+#X connect 24 0 45 2;
+#X connect 25 0 46 0;
+#X connect 26 0 46 1;
+#X connect 27 0 46 2;
+#X connect 30 0 47 0;
+#X connect 31 0 47 1;
+#X connect 32 0 47 2;
+#X connect 34 0 48 0;
+#X connect 35 0 48 1;
+#X connect 36 0 48 2;
+#X connect 38 0 0 0;
+#X connect 39 0 49 0;
+#X connect 40 0 49 1;
+#X connect 41 0 49 2;
+#X connect 43 0 17 0;
+#X connect 44 0 21 0;
+#X connect 45 0 28 0;
+#X connect 46 0 29 0;
+#X connect 47 0 33 0;
+#X connect 48 0 37 0;
+#X connect 49 0 42 0;
+#X restore 22 507 pd phrases-button-colorizer;
+#N canvas 462 40 518 517 phrases-editor-wrapper 1;
+#X obj 99 9 r phrases-editor-commands;
+#X obj 29 298 unpack f f f;
+#X obj 29 358 s phrases-midi-out;
+#X obj 110 28 r phrases-midi-in;
+#X obj 122 47 r phrases-active-key;
+#X obj 134 66 r phrases-transfer-in;
+#X obj 146 85 r phrases-notes-in;
+#X obj 157 104 r phrases-monome-x;
+#X obj 169 123 r phrases-monome-y;
+#X obj 99 264 phrases-editor - - - - -;
+#X obj 29 328 makenote 1 100;
+#X obj 181 142 r phrases-editor-x;
+#X obj 193 161 r phrases-editor-y;
+#X obj 204 180 r phrases-editor-color1;
+#X obj 216 199 r phrases-editor-color2;
+#X obj 228 218 r phrases-editor-color3;
+#X obj 240 237 r phrases-editor-color4;
+#X connect 0 0 9 0;
+#X connect 1 1 10 0;
+#X connect 1 2 10 1;
+#X connect 3 0 9 1;
+#X connect 4 0 9 2;
+#X connect 5 0 9 3;
+#X connect 6 0 9 4;
+#X connect 7 0 9 5;
+#X connect 8 0 9 6;
+#X connect 9 0 1 0;
+#X connect 10 0 2 0;
+#X connect 10 1 2 0;
+#X connect 11 0 9 7;
+#X connect 12 0 9 8;
+#X connect 13 0 9 9;
+#X connect 14 0 9 10;
+#X connect 15 0 9 11;
+#X connect 16 0 9 12;
+#X restore 24 214 pd phrases-editor-wrapper;
+#N canvas 264 0 737 556 phrases-keystroke-parser 0;
+#X obj 123 16 keyname;
+#X floatatom 110 42 5 0 0 0 - - -;
+#X obj 162 175 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 309 221 spigot;
+#X obj 198 175 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 309 198 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 309 246 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 309 269 i 0;
+#X obj 337 269 + 1;
+#X obj 365 269 mod 2;
+#X floatatom 309 294 5 0 0 0 - - -;
+#X floatatom 342 42 5 0 0 0 - - -;
+#X msg 309 453 symbol PHRASES-IGNORE;
+#X obj 309 175 route Escape;
+#X msg 110 175 1;
+#X msg 65 175 0;
+#X obj 162 244 spigot;
+#X obj 217 244 spigot;
+#X obj 76 290 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X obj 96 290 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X obj 65 16 keyup;
+#X obj 65 42 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X obj 110 66 route 1;
+#X msg 250 175 0;
+#X msg 334 429 symbol PHRASES-RECORD;
+#X obj 162 151 route ? | Shift_L Shift_R;
+#X obj 76 318 phrases-keychord;
+#X obj 76 341 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X msg 76 362 symbol PHRASES-SAVE;
+#X symbolatom 162 42 10 0 0 0 - - -;
+#X obj 162 126 list trim;
+#X obj 162 66 t s s b;
+#X msg 459 200 0;
+#X obj 409 234 spigot;
+#X msg 425 200 1;
+#X obj 409 148 t s;
+#X symbolatom 409 258 10 0 0 0 - - -;
+#X obj 116 290 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 474 258 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 475 294 spigot;
+#X msg 508 134 1;
+#X msg 478 144 0;
+#X obj 492 318 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 516 484 s phrases-metro-stop-bang;
+#X obj 501 504 s phrases-metro-start-bang;
+#X obj 334 504 s phrases-editor-commands;
+#X obj 309 368 route 1 0;
+#X connect 0 0 1 0;
+#X connect 0 0 11 0;
+#X connect 0 1 29 0;
+#X connect 1 0 22 0;
+#X connect 2 0 16 0;
+#X connect 3 0 6 0;
+#X connect 4 0 17 0;
+#X connect 5 0 3 0;
+#X connect 6 0 7 0;
+#X connect 7 0 8 0;
+#X connect 7 0 10 0;
+#X connect 8 0 9 0;
+#X connect 9 0 7 1;
+#X connect 10 0 46 0;
+#X connect 11 0 3 1;
+#X connect 12 0 45 0;
+#X connect 13 0 5 0;
+#X connect 13 1 34 0;
+#X connect 14 0 16 1;
+#X connect 14 0 17 1;
+#X connect 15 0 16 1;
+#X connect 15 0 17 1;
+#X connect 15 0 37 0;
+#X connect 16 0 18 0;
+#X connect 17 0 19 0;
+#X connect 18 0 26 0;
+#X connect 19 0 26 1;
+#X connect 20 0 21 0;
+#X connect 21 0 15 0;
+#X connect 22 0 14 0;
+#X connect 22 0 41 0;
+#X connect 22 1 40 0;
+#X connect 23 0 16 1;
+#X connect 23 0 17 1;
+#X connect 24 0 45 0;
+#X connect 25 0 2 0;
+#X connect 25 1 4 0;
+#X connect 25 2 23 0;
+#X connect 25 3 23 0;
+#X connect 25 4 13 0;
+#X connect 26 0 27 0;
+#X connect 27 0 28 0;
+#X connect 28 0 45 0;
+#X connect 29 0 31 0;
+#X connect 30 0 25 0;
+#X connect 31 0 35 0;
+#X connect 31 1 30 0;
+#X connect 31 2 32 0;
+#X connect 32 0 33 1;
+#X connect 33 0 36 0;
+#X connect 33 0 38 0;
+#X connect 34 0 33 1;
+#X connect 35 0 33 0;
+#X connect 36 0 39 0;
+#X connect 37 0 26 2;
+#X connect 39 0 42 0;
+#X connect 39 0 45 0;
+#X connect 40 0 39 1;
+#X connect 41 0 39 1;
+#X connect 46 0 12 0;
+#X connect 46 0 44 0;
+#X connect 46 1 24 0;
+#X connect 46 1 43 0;
+#X restore 26 157 pd phrases-keystroke-parser;
