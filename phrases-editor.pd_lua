@@ -86,7 +86,7 @@ function Editor:updateColor(ckey, color)
 	local cdark = clight
 	
 	for cn = 1, 3 do
-		clight[cn] = clight[cn] + math.ceil((255 - clight[cn]) / 2)
+		clight[cn] = clight[cn] + ((255 - clight[cn]) / 3)
 		cdark[cn] = math.floor(cdark[cn] / 1.5)
 	end
 	
@@ -98,29 +98,36 @@ end
 -- Update the color and contents of a cell in the editor panel
 function Editor:updateButton(cellx, celly, k, p) -- editor x pointer, editor y pointer, phrase key, note pointer
 
-	local cout = -1 -- Default color-out value
-	local mcout = -1 -- Default message-color-out value
-	local col = self.color[3] -- Default note-cell color set: blank note
+	local cout = -1 -- Color-out value
+	local mcout = -1 -- Message-color-out value
+	local col = {} -- Note-cell color set: blank note
 	local message = ""
 	
 	local gsize = (self.gridx * self.gridy)
+	--local offsetx = math.floor(self.editorx - 1 / 2)
+	local offsety = math.floor(self.editory / 4)
 	
-	local offsetx = math.floor(self.editorx / 2)
-	--local offsety = math.floor(self.editory / 4)
-	
-	local notex = ((cellx + k) - 1) - offsetx
-	if notex < 1 then
-		notex = gsize + notex
+	local notex = (cellx + k) - 1
+	if (notex < 1) or (notex > gsize) then
+		notex = ((notex - 1) % gsize) + 1
 	end
 	
-	local notey = (celly + p) - 1
-	if notey > #self.phrase[notex].notes then
-		notey = ((notey - 1) % #self.phrase[notex].notes) + 1
+	local notenum = #self.phrase[notex].notes
+	
+	-- Wrap short, non-active phrases against the active phrase's pointer
+	if p > notenum then
+		p = ((p - 1) % notenum) + 1
+	end
+	
+	--local notey = (celly + p) - 1
+	local notey = ((celly + p) - 1) - offsety
+	if (notey < 1) or (notey > notenum) then
+		notey = ((notey - 1) % notenum) + 1
 	end
 	
 	pd.post("gsize: " .. gsize)
-	pd.post("offsetx: " .. offsetx)
-	--pd.post("offsety: " .. offsety)
+	--pd.post("offsetx: " .. offsetx)
+	pd.post("offsety: " .. offsety)
 	pd.post("cellx: " .. cellx)
 	pd.post("celly: " .. celly)
 	pd.post("notex: " .. notex)
@@ -128,33 +135,30 @@ function Editor:updateButton(cellx, celly, k, p) -- editor x pointer, editor y p
 	
 	local note = self.phrase[notex].notes[notey]
 	
-	message = notey .. ". "
+	message = notey .. ". " .. table.concat(note, " ")
 	
-	if note[1] == -1 then -- Blank note color; stick with default
-		message = message .. "-1"
+	if note[1] == -1 then -- Blank note color
+		col = self.color[3]
 	elseif (note[1] >= 128) and (note[1] <= 159) then -- Note-on / note-off color
 		col = self.color[1]
-		message = message .. note[1] .. " " .. note[2] .. " " .. note[3]
 	else -- Other MIDI commands color
 		col = self.color[2]
-		message = message .. note[1] .. " " .. note[2]
-		if note[3] ~= nil then
-			message = message .. " " .. note[3]
-		end
 	end
 	
-	if notey == 1 then -- For all phrase-starting notes, use bright colors
-		cout = col[2]
-		mcout = self.color[4][2]
-	elseif cellx == (offsetx + 1) then -- For the active phrase, use regular colors
+	if cellx == 1 then -- For the active phrase, use regular colors
 		cout = col[1]
 		mcout = self.color[4][1]
-	else -- For all other notes, use dark colors
+	else -- For all inactive notes, use dark colors
 		cout = col[3]
 		mcout = self.color[4][3]
 	end
+		
+	if notey == 1 then -- For all phrase-starting notes, use bright colors
+		cout = col[2]
+		mcout = self.color[4][2]
+	end
 	
-	if celly == 1 then -- Reverse color values on the active row
+	if celly == offsety then -- Reverse color values on the active row
 		cout, mcout = mcout, cout
 	end
 	
@@ -224,7 +228,7 @@ function Editor:initialize(sel, atoms)
 	
 	self.pointer = 1 -- Pointer for note manipulation
 	
-	self.spacing = 1 -- Spacing of gaps between notes
+	self.spacing = 0 -- Spacing of gaps between notes
 	self.command = 144 -- Command-type for computer-keystrokes
 	self.octave = 1 -- Octave
 	self.channel = 0 -- MIDI channel
@@ -251,14 +255,17 @@ function Editor:in_1_symbol(s)
 		
 		if self.recording == true then
 		
-			for i = 1, self.spacing - 1 do
-				table.insert(self.phrase[self.key].notes, self.pointer, {-1})
-				self.pointer = self.pointer + 1
+			table.insert(self.phrase[self.key].notes, self.pointer, {self.command + self.channel, putnote, self.velocity})
+			
+			if self.spacing > 0 then
+				for i = 1, self.spacing do
+					table.insert(self.phrase[self.key].notes, self.pointer, {-1})
+					self.pointer = self.pointer + 1
+				end
 			end
-			
-			table.insert( self.phrase[self.key].notes, self.pointer, {self.command + self.channel, putnote, self.velocity})
+
 			self.pointer = self.pointer + 1
-			
+
 			pd.post("Inserted note " .. (self.command + self.channel) .. " " .. putnote .. " " .. self.velocity)
 			
 			self:updateGUI()
@@ -330,7 +337,7 @@ function Editor:in_1_symbol(s)
 			self.key = self.key + 1
 		end
 		
-		if self.key <= 0 then
+		if self.key < 1 then
 			self.key = self.gridy * self.gridx
 		elseif self.key > (self.gridy * self.gridx) then
 			self.key = 1
@@ -352,7 +359,7 @@ function Editor:in_1_symbol(s)
 	
 	elseif s == "Next" then -- Decrease spacing
 	
-		self.spacing = math.max(1, self.spacing - 1)
+		self.spacing = math.max(0, self.spacing - 1)
 		pd.post("Phrases-Editor: Spacing set to " .. self.spacing)
 	
 	elseif s == "Prior" then -- Increase spacing
