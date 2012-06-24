@@ -39,6 +39,7 @@ end
 
 -- Set default parameters for an empty phrase
 function Editor:setDefaults(k)
+
 	self.phrase[k] = {}
 	self.phrase[k].transfer = {}
 	for i = 1, 10 do -- Spawn all transference slots with empty values
@@ -50,107 +51,125 @@ function Editor:setDefaults(k)
 	self.phrase[k].notes = { {-1}, {-1}, {-1}, {-1} }
 	self.phrase[k].pointer = 1
 	self.phrase[k].active = false
+	
 end
 
 
 
 -- Translate a Pd color value into a table
 function Editor:seperateColor(c)
+
 	c = (c + 1) * -1
 	local c1 = c / 65536
 	local c2 = (c1 - math.floor(c1)) * 256
 	local c3 = (c2 - math.floor(c2)) * 256
+	
 	return { math.floor(c1), math.floor(c2), math.floor(c3) }
+	
 end
 
 -- Translate a table into a Pd color value
 function Editor:buildColor(c)
+
 	local clump = ((c[1] * -65536) + (c[2] * -256) + (c[3] * -1)) - 1
+	
 	return clump
+	
+end
+
+-- Update an internal color value and its variants
+function Editor:updateColor(ckey, color)
+
+	self.color[ckey][1] = color
+	
+	local clight = self:seperateColor(color)
+	local cdark = clight
+	
+	for cn = 1, 3 do
+		clight[cn] = clight[cn] + math.ceil((255 - clight[cn]) / 2)
+		cdark[cn] = math.floor(cdark[cn] / 1.5)
+	end
+	
+	self.color[ckey][2] = self:buildColor(clight)
+	self.color[ckey][3] = self:buildColor(cdark)
+
 end
 
 -- Update the color and contents of a cell in the editor panel
-function Editor:updateButton(x, y, k, p) -- editor x pointer, editor y pointer, phrase key, note pointer
+function Editor:updateButton(cellx, celly, k, p) -- editor x pointer, editor y pointer, phrase key, note pointer
 
-	local col = -1
-	local mcol = self.color4
+	local cout = -1 -- Default color-out value
+	local mcout = -1 -- Default message-color-out value
+	local col = self.color[3] -- Default note-cell color set: blank note
 	local message = ""
 	
-	-- Map editor position to grid position
 	local gsize = (self.gridx * self.gridy)
-	local offsetx = math.ceil(self.editorx / 2)
-	local offsety = math.floor(self.editory / 4)
-	local notek = (((x - 1) + k) % gsize) + 1
-	local notex = (((notek - offsetx) - 1) % gsize) + 1
-	--local notep = (y - 1) + p
-	local notep = (((y - 1) + p) % #self.phrase[notex].notes) + 1
-	--local notey =  ((notep - 1) % #self.phrase[notex].notes) + 1
-	local notey = (((notep - offsety) - 1) % #self.phrase[notex].notes) + 1
 	
-	--pd.post("debug: " .. gsize .. "-" .. offsetx .. "-" .. notek .. "-" .. notep .. "-" .. notex .. "-" .. notey)
+	local offsetx = math.floor(self.editorx / 2)
+	--local offsety = math.floor(self.editory / 4)
+	
+	local notex = ((cellx + k) - 1) - offsetx
+	if notex < 1 then
+		notex = gsize + notex
+	end
+	
+	local notey = (celly + p) - 1
+	if notey > #self.phrase[notex].notes then
+		notey = ((notey - 1) % #self.phrase[notex].notes) + 1
+	end
+	
+	pd.post("gsize: " .. gsize)
+	pd.post("offsetx: " .. offsetx)
+	--pd.post("offsety: " .. offsety)
+	pd.post("cellx: " .. cellx)
+	pd.post("celly: " .. celly)
+	pd.post("notex: " .. notex)
+	pd.post("notey: " .. notey)
 	
 	local note = self.phrase[notex].notes[notey]
 	
-	message = notep .. ". "
+	message = notey .. ". "
 	
-	if note[1] == -1 then -- Blank note color
-		col = self.color3
+	if note[1] == -1 then -- Blank note color; stick with default
 		message = message .. "-1"
 	elseif (note[1] >= 128) and (note[1] <= 159) then -- Note-on / note-off color
-		col = self.color1
+		col = self.color[1]
 		message = message .. note[1] .. " " .. note[2] .. " " .. note[3]
 	else -- Other MIDI commands color
-		col = self.color2
+		col = self.color[2]
 		message = message .. note[1] .. " " .. note[2]
 		if note[3] ~= nil then
 			message = message .. " " .. note[3]
 		end
 	end
 	
-	col = self:seperateColor(col)
-	mcol = self:seperateColor(mcol)
-	
-	if x ~= offsetx then -- Darken the visible notes of all inactive-but-visible phrases
-		for i = 1, 3 do
-			col[i] = math.floor(col[i] / 1.5)
-			mcol[i] = math.floor(mcol[i] / 1.5)
-		end
+	if notey == 1 then -- For all phrase-starting notes, use bright colors
+		cout = col[2]
+		mcout = self.color[4][2]
+	elseif cellx == (offsetx + 1) then -- For the active phrase, use regular colors
+		cout = col[1]
+		mcout = self.color[4][1]
+	else -- For all other notes, use dark colors
+		cout = col[3]
+		mcout = self.color[4][3]
 	end
 	
-	--if y == 1 then -- Reverse color values on the active row
-	if y == offsety then
-		col, mcol = mcol, col
+	if celly == 1 then -- Reverse color values on the active row
+		cout, mcout = mcout, cout
 	end
 	
-	if notey == 1 then -- Brighten all phrase-starting notes
-		for i = 1, 3 do
-			col[i] = col[i] + math.ceil((255 - col[i]) / 2)
-			mcol[i] = mcol[i] + math.ceil((255 - mcol[i]) / 2)
-		end
-	end
-	
-	-- Build Pd-readable color values
-	local cout = self:buildColor(col)
-	local mcout = self:buildColor(mcol)
-	
-	pd.send((y - 1) .. "-" .. (x - 1) .. "-editor-button", "color", {cout, mcout})
-	pd.send((y - 1) .. "-" .. (x - 1) .. "-editor-button", "label", {message})
-	--pd.post("debug: editor y-x " .. (y - 1) .. "-" .. (x - 1))
-	--pd.post("debug: note k-p-x-y " .. notek .. "-" .. notep .. "-" .. notex .. "-" .. notey)
+	pd.send((celly - 1) .. "-" .. (cellx - 1) .. "-editor-button", "color", {cout, mcout})
+	pd.send((celly - 1) .. "-" .. (cellx - 1) .. "-editor-button", "label", {message})
 
 end
 
 -- Update all cells in the editor GUI
 function Editor:updateGUI()
 
-	for ex = 1, self.editorx do
-	
-		for ey = 1, self.editory do
-		
+	for ey = 1, self.editory do
+		for ex = 1, self.editorx do
 			self:updateButton(ex, ey, self.key, self.pointer)
-		
 		end
-	
 	end
 
 end
@@ -188,11 +207,10 @@ function Editor:initialize(sel, atoms)
 	self.editorx = 6
 	self.editory = 32
 	
-	-- Default GUI colors
-	self.color1 = -1
-	self.color2 = -1
-	self.color3 = -1
-	self.color4 = -1
+	-- Default GUI colors: {regular, highlight, dark}
+	self.color = {
+		{-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
+	}
 	
 	self.phrase = {} -- For storing all phrase data
 	
@@ -256,7 +274,7 @@ function Editor:in_1_symbol(s)
 		pd.post("Phrases-Editor: Recording toggled on!")
 	
 		-- Update GUI
-		pd.send("phrases-editor-toggle-button", "color", {self.color1, self.color4})
+		pd.send("phrases-editor-toggle-button", "color", {self.color[1][1], self.color[4][1]})
 		pd.send("phrases-editor-toggle-button", "label", {"REC"})
 		self:updateGUI()
 		
@@ -266,7 +284,7 @@ function Editor:in_1_symbol(s)
 		pd.post("Phrases-Editor: Recording toggled off!")
 		
 		-- Update GUI
-		pd.send("phrases-editor-toggle-button", "color", {self.color2, self.color4})
+		pd.send("phrases-editor-toggle-button", "color", {self.color[2][1], self.color[4][1]})
 		pd.send("phrases-editor-toggle-button", "label", {"OFF"})
 		self:updateGUI()
 	
@@ -492,7 +510,7 @@ end
 -- Receive phrase key, to toggle the active phrase
 function Editor:in_3_float(f)
 
-	if (not(f == nil)) and (f > 0) then
+	if (f ~= nil) and (f > 0) then
 		self.key = f
 		if self.phrase[f] == nil then
 			self:setDefaults(f)
@@ -548,16 +566,12 @@ function Editor:in_6_float(x)
 
 	self.gridx = x
 	
-	self:updateGUI()
-	
 end
 
 -- Get global grid-height
 function Editor:in_7_float(y)
 
 	self.gridy = y
-	
-	self:updateGUI()
 	
 end
 
@@ -566,8 +580,6 @@ function Editor:in_8_float(x)
 
 	self.editorx = x
 	
-	self:updateGUI()
-	
 end
 
 -- Get global editor-height
@@ -575,43 +587,33 @@ function Editor:in_9_float(y)
 
 	self.editory = y
 	
-	self:updateGUI()
-	
 end
 
 -- Get GUI color-value
 function Editor:in_10_color(c)
 
-	self.color1 = c[1]
-	
-	self:updateGUI()
+	self:updateColor(1, c[1])
 	
 end
 
 -- Get GUI color-value
 function Editor:in_11_color(c)
 
-	self.color2 = c[1]
-	
-	self:updateGUI()
+	self:updateColor(2, c[1])
 	
 end
 
 -- Get GUI color-value
 function Editor:in_12_color(c)
 
-	self.color3 = c[1]
-	
-	self:updateGUI()
+	self:updateColor(3, c[1])
 	
 end
 
 -- Get GUI color-value
 function Editor:in_13_color(c)
 
-	self.color4 = c[1]
-	
-	self:updateGUI()
+	self:updateColor(4, c[1])
 	
 end
 
