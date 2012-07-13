@@ -125,10 +125,19 @@ end
 
 function Phrases:initialize(sel, atoms)
 
-	-- Inlets: Tempo bang; toggle bang; transference-toggle float; key number; transference list; note list; lists flush bang
-	self.inlets = 7
-	-- Outlets: MIDI-OUT; transference-modlist-out; Monome-LED-state-out; blink-out; flushed transference list; flushed note list
-	self.outlets = 6
+	-- Tempo bang;
+	-- Toggle bang;
+	-- Transference-toggle float;
+	-- Key number;
+	-- Transference list;
+	-- Note list;
+	self.inlets = 6
+	
+	-- MIDI-OUT
+	-- Transference-modlist-out
+	-- Monome-LED-state-out;
+	-- Blink-out;
+	self.outlets = 4
 	
 	self.midi = {}
 	for i = 0, 15 do
@@ -263,20 +272,5 @@ function Phrases:in_6_list(notesin)
 	
 	-- Update GUI
 	pd.send("phrases-button-colorize", "list", {self.key, 220, 220, 220})
-	
-end
-
--- List-flush bang
-function Phrases:in_7_bang()
-
-	local trtable = {}
-	
-	for k, v in ipairs(self.phrase[self.key].transfer) do
-		table.insert(trtable, k)
-		table.insert(trtable, v)
-	end
-	
-	self:outlet(5, "list", trtable)
-	self:outlet(6, "list", self.phrase[self.key].notes)
 	
 end
