@@ -1,6 +1,6 @@
 --[[
 
-Transference-routing object, designed for the particular requirements of Phrases-pd.
+Transference-routing object, designed for the particular requirements of PhrasesPd.
 
 Note: keys are all 1-indexed, for the sake of consistency.
 

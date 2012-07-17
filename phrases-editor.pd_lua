@@ -1,6 +1,6 @@
 --[[
 
-Editor object, designed for the particular requirements of Phrases-pd.
+Editor object, designed for the particular requirements of PhrasesPd.
 
 REMEMBER: Each phrase can only have notes of one channel, to prevent sustain trainwrecks
 
@@ -33,6 +33,53 @@ for k, v in ipairs(kbkeys) do
 	else
 		kbhash[v] = k - 1
 	end
+end
+
+
+
+-- Convert an arbitrarily-sized table into a table-shaped string, in preparation for saving to a file.
+local function saveTable(o, tab)
+
+	if type(o) == "number" then
+		io.write(o)
+	elseif type(o) == "string" then
+		io.write(string.format("%q", o))
+	elseif type(o) == "boolean" then
+		io.write(tostring(o))
+	elseif type(o) == "table" then
+		io.write("{\n")
+		for k, v in pairs(o) do
+			io.write(string.rep("  ", tab))
+			if type(k) ~= "number" then
+				io.write("[")
+				saveTable(k, 0)
+				io.write("] = ")
+			end
+			saveTable(v, tab + 1)
+			io.write(",\n")
+		end
+		io.write(string.rep("  ", tab - 1) .. "}\n")
+	else
+		error("cannot save a " .. type(o))
+	end
+
+end
+
+-- Load a Lua savefile and return its table data
+local function loadTable(f)
+
+	local data = {}
+	
+	local fcheck = io.open(f, "r")
+	if fcheck ~= nil then
+		data = dofile(f)
+	else
+		pd.post("Error: Attempted to load a file that doesn't exist!")
+	end
+	io.close(f)
+	
+	return data
+	
 end
 
 
@@ -181,22 +228,24 @@ function Editor:initialize(sel, atoms)
 
 	-- 1. Key commands in
 	-- 2. MIDI-IN
-	-- 3. Phrase key in
-	-- 4. Transference data in
-	-- 5. Note data in
-	-- 6. Grid width in
-	-- 7. Grid height in
-	-- 8. Editor width in
-	-- 9. Editor height in
-	-- 10. Editor GUI color 1 in
-	-- 11. Editor GUI color 2 in
-	-- 12. Editor GUI color 3 in
-	-- 13. Editor GUI color 4 in
-	self.inlets = 13
+	-- 3. Monome button in
+	-- 4. Loadfile name in
+	-- 5. Savefile name in
+	-- 6. Global BPM in
+	-- 7. Global TPB in
+	-- 8. Global GATE in
+	-- 9. Grid width in
+	-- 10. Grid height in
+	-- 11. Editor width in
+	-- 12. Editor height in
+	-- 13. Editor GUI color 1 in
+	-- 14. Editor GUI color 2 in
+	-- 15. Editor GUI color 3 in
+	-- 16. Editor GUI color 4 in
+	self.inlets = 16
 	
 	-- 1. Note-send out (to delayed note-off as well)
-	-- 2. Savedata out
-	self.outlets = 2
+	self.outlets = 1
 	
 	-- Default grid height and width
 	self.gridx = 8
@@ -205,6 +254,15 @@ function Editor:initialize(sel, atoms)
 	-- Default editor height and width
 	self.editorx = 6
 	self.editory = 32
+	
+	-- Default file names
+	self.loadfile = "phrases-default-testfile.lua"
+	self.savefile = "phrases-default-testfile.lua"
+	
+	-- Default BPM, TPB, GATE values
+	self.bpm = 120
+	self.tpb = 4
+	self.gate = 16
 	
 	-- Default GUI colors: {regular, highlight, dark}
 	self.color = {
@@ -308,35 +366,99 @@ function Editor:in_1_symbol(s)
 		pd.send("phrases-editor-toggle-button", "label", {"OFF"})
 		self:updateGUI()
 	
-	elseif s == "PHRASES-SAVE" then -- Save data; custom SAVE command generated through Pd
+	elseif s == "PHRASES-LOAD" then -- Load a Lua savefile into local variables
 	
-		local save = {}
-	
-		for i = 1, self.gridx * self.gridy do
+		if self.recording == true then
 		
-			pd.post("Prepping: Phrase " .. i)
-		
-			for k, v in ipairs(self.phrase[i].transfer) do
-				table.insert(save, "-3")
-				table.insert(save, k)
-				table.insert(save, v)
-				pd.post(k .. " : -3")
-			end
+			local loaddata = loadTable(self.loadfile)
 			
-			for k, v in ipairs(self.phrase[i].notes) do
-				pd.post("Prepping: Note " .. k)
-				for _, vv in ipairs(v) do
-					table.insert(save, vv)
-					pd.post(k .. " : " .. vv)
+			for k, v in pairs(loaddata) do
+				self[k] = v
+				pd.post("Loaded " .. k)
+			end
+		
+			self:updateGUI()
+	
+		end
+		
+	elseif s == "PHRASES-SAVE" then -- Save data as a Lua table in the savefile; custom SAVE command generated through Pd
+	
+		local o = ""
+	
+		for k, v in ipairs(self.phrase) do
+			
+			o = o .. "[\"" .. k .. "\"] = {\n"
+			
+			o = o .. "\t[\"transfer\"] = {"
+			
+			for k2, v2 in ipairs(v.transfer) do
+				if k2 > 1 then
+					o = o .. ", "
 				end
+				o = o .. v2
 			end
 			
-			table.insert(save, "-10")
+			o = o .. "}\n\t[\"notes\"] = {\n"
+			
+			for k2, v2 in ipairs(v.notes) do
+			
+				o = o .. "\t\t{"
+			
+				for k3, v3 in ipairs(v2) do
+					if k3 > 1 then
+						o = o .. ", "
+					end
+					o = o .. v3
+				end
+				
+				o = o .. "}"
+				
+			end
+			
+			o = o .. "\t}\n"
+			
+			o = o .. "}\n"
 			
 		end
 		
-		pd.post("Sending all prepared phrase data from the editor to the data-save mechanism...")
-		self:outlet(2, "list", save)
+		local f = assert(io.open(self.savefile, "w"))
+		f:write(o)
+		f:close()
+		pd.post("Data saved!")
+	
+		--local save = {self.bpm, self.tpb, self.gate, self.phrase}
+		--io.output(self.savefile)
+		--saveTable(save, 1, false)
+		--pd.post("Data saved!")
+		
+		
+		
+		--local save = {}
+		
+		--for i = 1, self.gridx * self.gridy do
+		
+		--	pd.post("Prepping: Phrase " .. i)
+		
+		--	for k, v in ipairs(self.phrase[i].transfer) do
+		--		table.insert(save, "-3")
+		--		table.insert(save, k)
+		--		table.insert(save, v)
+		--		pd.post(k .. " : " .. v)
+		--	end
+			
+		--	for k, v in ipairs(self.phrase[i].notes) do
+		--		for _, vv in ipairs(v) do
+		--			table.insert(save, vv)
+		--		end
+		--		pd.post("Prepping: Note" .. k .. " : " .. table.concat(v, " "))
+		--	end
+			
+		--	table.insert(save, "-10")
+			
+		--end
+		
+		--pd.post("Sending all prepared phrase data from the editor to the data-save mechanism...")
+		--self:outlet(2, "list", save)
 	
 	elseif s == "Down" then -- Advance pointer
 	
@@ -559,7 +681,7 @@ function Editor:in_2_list(note)
 	
 end
 
--- Receive phrase key, to toggle the active phrase
+-- Receive Monome button commant, to change the active phrase
 function Editor:in_3_float(f)
 
 	if f > 0 then
@@ -573,76 +695,53 @@ function Editor:in_3_float(f)
 
 end
 
--- Transference-list in
-function Editor:in_4_list(trin)
-
-	self.phrase[self.key].transfer = {} -- Clear previous transference data
-	
-	for j = 1, #trin, 2 do -- Insert new transference data
-		if (trin[j] >= 1) and (trin[j] <= 10) then
-			self.phrase[self.key].transfer[trin[j]] = trin[j + 1]
-		end
-	end
-	
-	self:updateGUI()
-
+-- Get loadfile name
+function Editor:in_4_symbol(s)
+	self.loadfile = s
 end
 
--- Note-list in
-function Editor:in_5_list(notesin)
+-- Get savefile name
+function Editor:in_5_symbol(s)
+	self.savefile = s
+end
 
-	local k, n = 0, 0
-	
-	self.phrase[self.key].notes = {} -- Erase old notes
+-- Get global BPM value
+function Editor:in_6_float(f)
+	self.bpm = f
+end
 
-	for i = 1, #notesin do
-	
-		if (notesin[i] >= 128) or (notesin[i] <= -1) then
-			n = 1
-			k = k + 1
-			self.phrase[self.key].notes[k] = {}
-			self.phrase[self.key].notes[k][n] = notesin[i]
-		else
-			n = n + 1
-			self.phrase[self.key].notes[k][n] = notesin[i]
-		end
-	
-	end
-	
-	self:updateGUI()
+-- Get global TPB value
+function Editor:in_7_float(f)
+	self.tpb = f
+end
 
+-- Get global GATE value
+function Editor:in_8_float(f)
+	self.gate = f
 end
 
 -- Get global grid-width
-function Editor:in_6_float(x)
-
+function Editor:in_9_float(x)
 	self.gridx = x
-	
 end
 
 -- Get global grid-height
-function Editor:in_7_float(y)
-
+function Editor:in_10_float(y)
 	self.gridy = y
-	
 end
 
 -- Get global editor-width
-function Editor:in_8_float(x)
-
+function Editor:in_11_float(x)
 	self.editorx = x
-	
 end
 
 -- Get global editor-height
-function Editor:in_9_float(y)
-
+function Editor:in_12_float(y)
 	self.editory = y
-	
 end
 
 -- Get GUI color-value
-function Editor:in_10_color(c)
+function Editor:in_13_color(c)
 
 	self:updateColor(1, c[1])
 	
@@ -651,7 +750,7 @@ function Editor:in_10_color(c)
 end
 
 -- Get GUI color-value
-function Editor:in_11_color(c)
+function Editor:in_14_color(c)
 
 	self:updateColor(2, c[1])
 	
@@ -660,7 +759,7 @@ function Editor:in_11_color(c)
 end
 
 -- Get GUI color-value
-function Editor:in_12_color(c)
+function Editor:in_15_color(c)
 
 	self:updateColor(3, c[1])
 	
@@ -669,11 +768,10 @@ function Editor:in_12_color(c)
 end
 
 -- Get GUI color-value
-function Editor:in_13_color(c)
+function Editor:in_16_color(c)
 
 	self:updateColor(4, c[1])
 	
 	self:updateGUI()
 	
 end
-

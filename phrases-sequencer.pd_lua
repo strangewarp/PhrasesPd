@@ -1,6 +1,6 @@
 --[[
 
-Phrases object, designed for the particular requirements of Phrases-pd.
+Phrases object, designed for the particular requirements of PhrasesPd.
 
 Note: Phrase keys are 1-indexed.
 

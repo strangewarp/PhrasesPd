@@ -1,6 +1,6 @@
 --[[
 
-GUI-creation object, designed for the particular requirements of Phrases-pd.
+GUI-creation object, designed for the particular requirements of PhrasesPd.
 
 --]]
 

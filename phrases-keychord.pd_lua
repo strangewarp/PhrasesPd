@@ -1,6 +1,6 @@
 --[[
 
-Key-chord-parser object, designed for the particular requirements of Phrases-pd.
+Key-chord-parser object, designed for the particular requirements of PhrasesPd.
 
 --]]
 
