@@ -37,34 +37,6 @@ end
 
 
 
--- Convert an arbitrarily-sized table into a table-shaped string, in preparation for saving to a file.
-local function saveTable(o, tab)
-
-	if type(o) == "number" then
-		io.write(o)
-	elseif type(o) == "string" then
-		io.write(string.format("%q", o))
-	elseif type(o) == "boolean" then
-		io.write(tostring(o))
-	elseif type(o) == "table" then
-		io.write("{\n")
-		for k, v in pairs(o) do
-			io.write(string.rep("  ", tab))
-			if type(k) ~= "number" then
-				io.write("[")
-				saveTable(k, 0)
-				io.write("] = ")
-			end
-			saveTable(v, tab + 1)
-			io.write(",\n")
-		end
-		io.write(string.rep("  ", tab - 1) .. "}\n")
-	else
-		error("cannot save a " .. type(o))
-	end
-
-end
-
 -- Load a Lua savefile and return its table data
 local function loadTable(f)
 
