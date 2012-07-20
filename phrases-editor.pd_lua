@@ -340,97 +340,139 @@ function Editor:in_1_symbol(s)
 	
 	elseif s == "PHRASES-LOAD" then -- Load a Lua savefile into local variables
 	
-		if self.recording == true then
+		local activecheck = false
+	
+		-- Check all current phrases for activity, and change the flag appropriately
+		for _, v in pairs(self.phrase) do
+			if v.active == true then
+				activecheck = true
+			end
+		end
+	
+		-- Does not require recording-mode to be on; but no phrases must currently be active, in order to prevent errors
+		if activecheck == false then
 		
-			local loaddata = loadTable(self.loadfile)
+			local lfunc = assert(loadfile(self.loadfile))
+			local ltemp = lfunc()
 			
-			for k, v in pairs(loaddata) do
-				self[k] = v
-				pd.post("Loaded " .. k)
+			self.bpm = ltemp.bpm
+			self.tpb = ltemp.tpb
+			self.gate = ltemp.gate
+			
+			for i = 1, self.gridx * self.gridy do
+				self.phrase[i].transfer = ltemp.phrase[i].transfer
+				self.phrase[i].notes = ltemp.phrase[i].notes
 			end
 		
 			self:updateGUI()
 	
+		else
+		
+			pd.post("Couldn't load file: Some phrases are still active!")
+		
 		end
 		
 	elseif s == "PHRASES-SAVE" then -- Save data as a Lua table in the savefile; custom SAVE command generated through Pd
 	
-		local o = ""
+		local o = "return\n\n" -- Make the table executable, for the load function
+
+		o = o .. "{\n\n" -- Open bracket for entire savedata table
 	
+		o = o .. "\t[\"bpm\"] = " .. self.bpm .. ", -- Global beats-per-minute\n" -- Save BPM
+		o = o .. "\t[\"tpb\"] = " .. self.tpb .. ", -- Global ticks-per-beat\n" -- Save TPB
+		o = o .. "\t[\"gate\"] = " .. self.gate .. ", -- Global gate size\n" -- Save gating
+		o = o .. "\n"
+		o = o .. "\t[\"phrase\"] = {\n\n" -- Parent phrase table
+	
+		-- Add all phrase data to the long string
 		for k, v in ipairs(self.phrase) do
 			
-			o = o .. "[\"" .. k .. "\"] = {\n"
+			o = o .. "\t\t[\"" .. k .. "\"] = {\n" -- Phrase number
 			
-			o = o .. "\t[\"transfer\"] = {"
-			
+			o = o .. "\t\t\t[\"transfer\"] = {" -- Phrase transference
 			for k2, v2 in ipairs(v.transfer) do
 				if k2 > 1 then
 					o = o .. ", "
 				end
 				o = o .. v2
 			end
+			o = o .. "},\n" -- Close transference table
 			
-			o = o .. "}\n\t[\"notes\"] = {\n"
-			
+			o = o .. "\t\t\t[\"notes\"] = {\n" -- Phrase notes
+			local sbr = false -- Track when newlines and tabs are required amongst the note tables
+			local sgnum = 0 -- Track which lines should have a gate-note comment
+			local sgitem = 0 -- Track which line items are the gate tick, for multi-item lines
 			for k2, v2 in ipairs(v.notes) do
 			
-				o = o .. "\t\t{"
-			
+				if ((k2 - 1) % self.gate) == 0 then -- If the note falls on a gate tick, set the relevant flag
+					if sgnum == 0 then -- Only set the gate-note comment flag if it hasn't been set earlier in the line
+						sgnum = k2
+					end
+				end
+				
+				if (sbr == true)
+				or (k2 == 1)
+				then -- Ensure newlines are properly tabbed, checking for multi-item lines
+					o = o .. "\t\t\t\t"
+					sbr = false -- Unset newline-okay flag
+				end
+				
+				o = o .. "{" -- Open note-value table
+				-- Individual MIDI note values
 				for k3, v3 in ipairs(v2) do
 					if k3 > 1 then
 						o = o .. ", "
 					end
 					o = o .. v3
 				end
+				o = o .. "}," -- Close note-value table
 				
-				o = o .. "}"
+				if (v.notes[k2 + 1] ~= nil) -- Peek at the next note to judge whether a newline is appropriate
+				and (
+					(v.notes[k2 + 1][1] ~= -1)
+					or (
+						(v.notes[k2 + 1][1] >= 128)
+						and (v.notes[k2 + 1] <= 159)
+					)
+				)
+				then
+					-- If any notes in the previous line fell on a gate tick, offer up some metadata
+					if sgnum > 0 then
+						o = o .. " -- Gate tick (note " .. sgnum .. ")"
+						o = o .. " ((" .. self.gate .. "*" .. math.floor((sgnum - 1) / self.gate) .. ")+1)"
+						o = o .. " (line item " .. (sgitem + 1) .. ")"
+						sgnum = 0
+					end
+					sbr = true -- Set newline-okay flag
+				end
+				
+				if sbr == true then -- If the newline flag is set, insert a newline; else insert a space
+					o = o .. "\n"
+					sgitem = 0
+				else
+					o = o .. " "
+					if sgnum == 0 then -- If no notes on this line fell on a gate tick yet, increase the line-item number
+						sgitem = sgitem + 1
+					end
+				end
 				
 			end
+			o = o .. "\n"
+			o = o .. "\t\t\t}\n" -- Close notes table
 			
-			o = o .. "\t}\n"
-			
-			o = o .. "}\n"
+			o = o .. "\t\t},\n" -- Close phrase table
 			
 		end
 		
+		o = o .. "\n\t}\n" -- Close parent phrase table
+		
+		o = o .. "\n}\n" -- Close entire savedata table
+		
+		-- Use complex Lua file manipulation, to prevent weird file errors while Pd is running
 		local f = assert(io.open(self.savefile, "w"))
 		f:write(o)
 		f:close()
 		pd.post("Data saved!")
-	
-		--local save = {self.bpm, self.tpb, self.gate, self.phrase}
-		--io.output(self.savefile)
-		--saveTable(save, 1, false)
-		--pd.post("Data saved!")
-		
-		
-		
-		--local save = {}
-		
-		--for i = 1, self.gridx * self.gridy do
-		
-		--	pd.post("Prepping: Phrase " .. i)
-		
-		--	for k, v in ipairs(self.phrase[i].transfer) do
-		--		table.insert(save, "-3")
-		--		table.insert(save, k)
-		--		table.insert(save, v)
-		--		pd.post(k .. " : " .. v)
-		--	end
-			
-		--	for k, v in ipairs(self.phrase[i].notes) do
-		--		for _, vv in ipairs(v) do
-		--			table.insert(save, vv)
-		--		end
-		--		pd.post("Prepping: Note" .. k .. " : " .. table.concat(v, " "))
-		--	end
-			
-		--	table.insert(save, "-10")
-			
-		--end
-		
-		--pd.post("Sending all prepared phrase data from the editor to the data-save mechanism...")
-		--self:outlet(2, "list", save)
 	
 	elseif s == "Down" then -- Advance pointer
 	
