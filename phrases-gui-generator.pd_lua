@@ -8,29 +8,79 @@ local GUIGenerator = pd.Class:new():register("phrases-gui-generator")
 
 
 
-local function buildObject(title, cx, cy, mx, my, xkey, ykey)
+-- Names of grid-window side-panel buttons
+local gsnames = {
+	"phrases-grid-gate-button",
+}
+
+-- Names of editor-window side-panel buttons
+local esnames = {
+	"phrases-editor-toggle-button",
+	"phrases-editor-key-button",
+	"phrases-editor-item-button",
+	"phrases-editor-tick-button",
+	"phrases-editor-mode-button",
+	"phrases-editor-channel-button",
+	"phrases-editor-command-button",
+	"phrases-editor-velocity-button",
+	"phrases-editor-octave-button",
+	"phrases-editor-spacing-button",
+}
+
+
+
+local function buildObject(xpos, ypos, xsize, ysize, stitle, rtitle, label, labelx, labely, fontnum, fontsize, bgcolor, labelcolor)
 
 	local obj = {
 		"obj", -- Object tag
-		(cx + mx) * xkey, -- X-position in pixels
-		(cy + my) * ykey, -- Y-position in pixels
+		xpos or 1, -- X-position in pixels
+		ypos or 1, -- Y-position in pixels
 		"cnv", -- Canvas tag
-		math.min(cx, cy), -- Canvas-box size
-		cx, -- Canvas object width in pixels
-		cy, -- Canvas object height in pixels
-		"empty",
-		ykey .. "-" .. xkey .. "-" .. title .. "-button", -- Unique GUI cell name
-		"empty",
-		1,
-		5,
-		0,
-		10,
-		-233017,
-		-262144,
+		math.min(xsize, ysize), -- Selectable box size
+		xsize or 20, -- Canvas object width in pixels
+		ysize or 20, -- Canvas object height in pixels
+		stitle or "empty", -- Name of another object that this object passes its messages onwards to
+		rtitle or "empty", -- Object name
+		label or "empty", -- Object label
+		labelx or 1, -- Label X offset
+		labely or 6, -- Label Y offset
+		fontnum or 0, -- Label font number
+		fontsize or 10, -- Label font size
+		bgcolor or -233017, -- Background color
+		labelcolor or -262144, -- Label color
 		0
 	}
 	
 	return obj
+	
+end
+
+-- Build a grid of buttons out of a table of object names
+local function buildGrid(names, sendto, x, absx, absy, width, height, mx, my, fsize)
+
+	for k, v in ipairs(names) do
+	
+		out = buildObject(
+			absx + ((width + mx) * ((k - 1) % x)), -- X-position
+			absy + ((height + my) * math.floor((k - 1) / x)), -- Y-position
+			width, -- Width
+			height, -- Height
+			_,
+			v, -- Addressable object name
+			_,
+			_,
+			_,
+			_,
+			fsize, -- Font size
+			_,
+			_,
+			_
+		)
+		
+		pd.send(sendto, "list", out)
+		pd.post("Phrases-GUI-Generator: Initialized object " .. v)
+		
+	end
 	
 end
 
@@ -52,11 +102,19 @@ end
 
 function GUIGenerator:initialize(sel, atoms)
 
-	-- GUI-creation bang;
-	-- Grid width (cells); grid height (cells); grid width (pixels); grid height (pixels);
-	-- Grid margin x (pixels); grid margin y (pixels);
-	-- Editor width (notes); editor height (phrases); editor width (pixels); editor height (pixels)
-	-- Editor margin x (pixels); editor margin y (pixels)
+	-- 1. GUI-creation bang
+	-- 2. Grid width (cells)
+	-- 3. Grid height (cells)
+	-- 4. Grid width (pixels)
+	-- 5. Grid height (pixels)
+	-- 6. Grid margin x (pixels)
+	-- 7. Grid margin y (pixels)
+	-- 8. Editor width (cells)
+	-- 9. Editor height (cells)
+	-- 10. Editor width (pixels)
+	-- 11. Editor height (pixels)
+	-- 12. Editor margin x (pixels)
+	-- 13. Editor margin y (pixels)
 	self.inlets = 13
 	
 	-- All GUI data is sent directly to the GUI windows, using pd.send() - thus, no outlets
@@ -99,72 +157,73 @@ end
 -- Send all GUI elements
 function GUIGenerator:in_1_bang()
 
-	local out = {}
-
-	-- Monome grid GUI
+	-- Generate grid-window cells
+	local gridnames = {}
 	for y = 0, self.gridcy - 1 do
 		for x = 0, self.gridcx - 1 do
-			out = buildObject(
-				"grid",
-				self.gridcwidth, self.gridcheight,
-				self.gridmx, self.gridmy,
-				x, y
-			)
-			pd.send("phrases-grid-gui-object", "list", out)
-			pd.post("Phrases-GUI-Generator: Initialized grid cell " .. out[9])
+			table.insert(gridnames, y .. "-" .. x .. "-grid-button")
 		end
 	end
-	
-	-- Add gating button to grid window
-	out = {
-		"obj", -- Object tag
-		self.gridpx + self.gridmx, -- X-position in pixels
-		self.gridmy, -- Y-position in pixels
-		"cnv", -- Canvas tag
-		math.min(self.gridcwidth * 1.5, self.gridcheight * 1.5), -- Canvas-box size
-		self.gridcwidth * 1.5, -- Canvas object width in pixels
-		self.gridcheight * 1.5, -- Canvas object height in pixels
-		"empty",
-		"phrases-grid-gate-button", -- Unique GUI cell name
-		"empty", 20, 12, 0, 14, -233017, -262144, 0
-	}
-	pd.send("phrases-grid-gui-object", "list", out)
-	pd.post("Phrases-GUI-Generator: Initialized grid gating button")
-	
-	-- Sequence-editor GUI
+	buildGrid(
+		gridnames, -- List of the object names to make into a grid
+		"phrases-grid-gui-object", -- Send generated objects to this object
+		self.gridcx, -- X-cells
+		self.gridmx, -- Absolute left position
+		self.gridmy, -- Absolute top position
+		self.gridcwidth, -- Cell width
+		self.gridcheight, -- Cell height
+		self.gridmx, -- Grid X-margin
+		self.gridmy, -- Grid Y-margin
+		self.gridcheight -- Font size
+	)
+
+	-- Generate gate-window side-panel
+	buildGrid(
+		gsnames,
+		"phrases-grid-gui-object",
+		1,
+		((self.gridcwidth + self.gridmx) * self.gridcx) + self.gridmx,
+		self.gridmy,
+		self.gridcwidth * 1.5,
+		self.gridcheight * 1.5,
+		self.gridmx,
+		self.gridmy,
+		math.floor(self.gridcheight * 1.5)
+	)
+
+	-- Generate editor-window cells
+	local editornames = {}
 	for y = 0, self.editorcy - 1 do
 		for x = 0, self.editorcx - 1 do
-			out = buildObject(
-				"editor",
-				self.editorcwidth, self.editorcheight,
-				self.editormx, self.editormy,
-				x, y
-			)
-			pd.send("phrases-editor-gui-object", "list", out)
-			pd.post("Phrases-GUI-Generator: Initialized editor cell " .. out[9])
+			table.insert(editornames, y .. "-" .. x .. "-editor-button")
 		end
 	end
+	buildGrid(
+		editornames,
+		"phrases-editor-gui-object",
+		self.editorcx,
+		self.editormx,
+		self.editormy,
+		self.editorcwidth,
+		self.editorcheight,
+		self.editormx,
+		self.editormy,
+		self.editorcheight
+	)
 	
-	-- Add toggle button to editor window
-	out = {
-		"obj", -- Object tag
-		self.editorpx + self.editormx, -- X-position in pixels
-		self.editormy, -- Y-position in pixels
-		"cnv", -- Canvas tag
-		math.floor(math.min(self.editorcwidth * 1.5, self.editorcheight * 1.5)), -- Canvas-box size
-		self.editorcwidth * 1.5, -- Canvas object width in pixels
-		self.editorcheight * 1.5, -- Canvas object height in pixels
-		"empty",
-		"phrases-editor-toggle-button", -- Unique GUI cell name
-		"empty",
-		1, 7,
-		0,
-		math.floor(self.editorcheight * 1.5),
-		-233017, -1000000,
-		0
-	}
-	pd.send("phrases-editor-gui-object", "list", out)
-	pd.post("Phrases-GUI-Generator: Initialized editor toggle button")
+	-- Generate editor-window side-panel
+	buildGrid(
+		esnames,
+		"phrases-editor-gui-object",
+		1,
+		((self.editorcwidth + self.editormx) * self.editorcx) + self.editormx,
+		self.editormy,
+		self.editorcwidth * 1.25,
+		self.editorcheight * 1.25,
+		self.editormx,
+		self.editormy,
+		math.floor(self.editorcheight * 1.25)
+	)
 
 end
 
