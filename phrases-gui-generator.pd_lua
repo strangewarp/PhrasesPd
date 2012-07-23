@@ -56,7 +56,7 @@ local function buildObject(xpos, ypos, xsize, ysize, stitle, rtitle, label, labe
 end
 
 -- Build a grid of buttons out of a table of object names
-local function buildGrid(names, sendto, x, absx, absy, width, height, mx, my, fsize)
+local function buildGrid(names, sendto, x, absx, absy, width, height, mx, my, labelx, labely, fsize)
 
 	for k, v in ipairs(names) do
 	
@@ -68,8 +68,8 @@ local function buildGrid(names, sendto, x, absx, absy, width, height, mx, my, fs
 			_,
 			v, -- Addressable object name
 			_,
-			_,
-			_,
+			labelx,
+			labely,
 			_,
 			fsize, -- Font size
 			_,
@@ -174,6 +174,8 @@ function GUIGenerator:in_1_bang()
 		self.gridcheight, -- Cell height
 		self.gridmx, -- Grid X-margin
 		self.gridmy, -- Grid Y-margin
+		math.floor(self.gridcwidth / 50), -- Label X-offset
+		4 + math.floor(self.gridcheight / 10), -- Label Y-offset
 		self.gridcheight -- Font size
 	)
 
@@ -188,6 +190,8 @@ function GUIGenerator:in_1_bang()
 		self.gridcheight * 1.5,
 		self.gridmx,
 		self.gridmy,
+		math.floor(self.gridcwidth / 50),
+		4 + math.floor(self.gridcheight / 10),
 		math.floor(self.gridcheight * 1.5)
 	)
 
@@ -208,6 +212,8 @@ function GUIGenerator:in_1_bang()
 		self.editorcheight,
 		self.editormx,
 		self.editormy,
+		math.floor(self.editorcwidth / 50),
+		4 + math.floor(self.editorcheight / 10),
 		self.editorcheight
 	)
 	
@@ -222,6 +228,8 @@ function GUIGenerator:in_1_bang()
 		self.editorcheight * 1.25,
 		self.editormx,
 		self.editormy,
+		math.floor(self.editorcwidth / 50),
+		4 + math.floor(self.editorcheight / 10),
 		math.floor(self.editorcheight * 1.25)
 	)
 

@@ -75,43 +75,16 @@ end
 
 
 
--- Translate a Pd color value into a table
-local function seperateColor(c)
-
-	c = (c + 1) * -1
-	local c1 = c / 65536
-	local c2 = (c1 - math.floor(c1)) * 256
-	local c3 = (c2 - math.floor(c2)) * 256
-	
-	return { math.floor(c1), math.floor(c2), math.floor(c3) }
-	
-end
-
--- Translate a table into a Pd color value
-local function buildColor(c)
-
-	local clump = ((c[1] * -65536) + (c[2] * -256) + (c[3] * -1)) - 1
-	
-	return clump
-	
-end
-
 -- Update an internal color value and its variants
 function Editor:updateColor(ckey, color)
 
-	self.color[ckey][1] = color
-	
-	local clight = seperateColor(color)
-	local cdark = clight
-	
-	for cn = 1, 3 do
-		clight[cn] = math.floor(clight[cn] + ((255 - clight[cn]) / 3))
-		cdark[cn] = math.floor(cdark[cn] / 1.5)
+	-- This function expects colors in bursts of 3 (regular, light, dark), so it treats incoming values along those lines
+	if #self.color[ckey] < 3 then
+		table.insert(self.color[ckey], color)
+	else
+		self.color[ckey] = {color}
 	end
 	
-	self.color[ckey][2] = buildColor(clight)
-	self.color[ckey][3] = buildColor(cdark)
-
 end
 
 -- Update the color and contents of a cell in the editor panel
@@ -185,7 +158,7 @@ function Editor:updateToggleButton()
 		pd.send("phrases-editor-toggle-button", "label", {"REC"})
 	else
 		pd.send("phrases-editor-toggle-button", "color", {self.color[2][1], self.color[4][1]})
-		pd.send("phrases-editor-toggle-button", "label", {"OFF"})
+		pd.send("phrases-editor-toggle-button", "label", {"PLAY"})
 	end
 
 end
@@ -193,16 +166,7 @@ end
 -- Update the phrase-key button
 function Editor:updateKeyButton()
 
-	local kcolor1 = seperateColor(self.color[2][2])
-	local kcolor2 = seperateColor(self.color[2][3])
-	
-	for i = 1, 3 do
-		kcolor1[i] = kcolor1[i] + ((kcolor2[i] - (kcolor1[i] * (#self.phrase / self.key))))
-	end
-	
-	local outcol = buildColor(kcolor1)
-	
-	pd.send("phrases-editor-key-button", "color", {outcol, self.color[4][1]})
+	pd.send("phrases-editor-key-button", "color", {self.color[2][2], self.color[4][2]})
 	pd.send("phrases-editor-key-button", "label", {"Phrase " .. self.key})
 	
 end
@@ -210,16 +174,7 @@ end
 -- Update the note-item button
 function Editor:updateItemButton()
 
-	local kcolor1 = seperateColor(self.color[3][2])
-	local kcolor2 = seperateColor(self.color[3][3])
-	
-	for i = 1, 3 do
-		kcolor1[i] = kcolor1[i] + ((kcolor2[i] - (kcolor1[i] * (#self.phrase[self.key].notes / self.pointer))))
-	end
-	
-	local outcol = buildColor(kcolor1)
-	
-	pd.send("phrases-editor-item-button", "color", {outcol, self.color[4][1]})
+	pd.send("phrases-editor-item-button", "color", {self.color[2][1], self.color[4][1]})
 	pd.send("phrases-editor-item-button", "label", {"Item " .. self.pointer})
 	
 end
@@ -245,7 +200,7 @@ function Editor:updateTickButton()
 		end
 	end
 	
-	pd.send("phrases-editor-tick-button", "color", {self.color[3][1], self.color[4][1]})
+	pd.send("phrases-editor-tick-button", "color", {self.color[2][1], self.color[4][1]})
 	pd.send("phrases-editor-tick-button", "label", {"Tick " .. tcount})
 
 end
@@ -254,10 +209,10 @@ end
 function Editor:updateModeButton()
 
 	if self.inputmode == "note" then
-		pd.send("phrases-editor-mode-button", "color", {self.color[2][2], self.color[4][2]})
+		pd.send("phrases-editor-mode-button", "color", {self.color[2][1], self.color[4][1]})
 		pd.send("phrases-editor-mode-button", "label", {"Mode: Note"})
 	elseif self.inputmode == "tr" then
-		pd.send("phrases-editor-mode-button", "color", {self.color[2][3], self.color[4][3]})
+		pd.send("phrases-editor-mode-button", "color", {self.color[2][1], self.color[4][1]})
 		pd.send("phrases-editor-mode-button", "label", {"Mode: Tr"})
 	end
 
@@ -951,7 +906,7 @@ function Editor:in_12_float(y)
 	self.editory = y
 end
 
--- Get GUI color-value
+-- Get GUI color-values
 function Editor:in_13_color(c)
 
 	self:updateColor(1, c[1])
