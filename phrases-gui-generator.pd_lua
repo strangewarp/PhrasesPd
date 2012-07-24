@@ -157,6 +157,22 @@ end
 -- Send all GUI elements
 function GUIGenerator:in_1_bang()
 
+	-- Generate grid-window background
+	buildGrid(
+		{"phrases-grid-bg"},
+		"phrases-grid-gui-object",
+		1,
+		0,
+		0,
+		((self.gridcwidth + self.gridmx) * self.gridcx) + self.gridcwidth + (self.gridmx * 2),
+		((self.gridcheight + self.gridmy) * self.gridcy) + self.editormy,
+		1,
+		1,
+		_,
+		_,
+		_
+	)
+	
 	-- Generate grid-window cells
 	local gridnames = {}
 	for y = 0, self.gridcy - 1 do
@@ -175,7 +191,7 @@ function GUIGenerator:in_1_bang()
 		self.gridmx, -- Grid X-margin
 		self.gridmy, -- Grid Y-margin
 		math.floor(self.gridcwidth / 50), -- Label X-offset
-		4 + math.floor(self.gridcheight / 10), -- Label Y-offset
+		6, -- Label Y-offset
 		self.gridcheight -- Font size
 	)
 
@@ -186,15 +202,31 @@ function GUIGenerator:in_1_bang()
 		1,
 		((self.gridcwidth + self.gridmx) * self.gridcx) + self.gridmx,
 		self.gridmy,
-		self.gridcwidth * 1.5,
-		self.gridcheight * 1.5,
+		self.gridcwidth,
+		self.gridcheight,
 		self.gridmx,
 		self.gridmy,
 		math.floor(self.gridcwidth / 50),
-		4 + math.floor(self.gridcheight / 10),
+		6,
 		math.floor(self.gridcheight * 1.5)
 	)
 
+	-- Generate editor-window background
+	buildGrid(
+		{"phrases-editor-bg"},
+		"phrases-editor-gui-object",
+		1,
+		0,
+		0,
+		((self.editorcwidth + self.editormx) * self.editorcx) + (self.editorcwidth * 1.5) + (self.editormx * 2),
+		((self.editorcheight + self.editormy) * self.editorcy) + self.editormy,
+		1,
+		1,
+		_,
+		_,
+		_
+	)
+	
 	-- Generate editor-window cells
 	local editornames = {}
 	for y = 0, self.editorcy - 1 do
@@ -213,7 +245,7 @@ function GUIGenerator:in_1_bang()
 		self.editormx,
 		self.editormy,
 		math.floor(self.editorcwidth / 50),
-		4 + math.floor(self.editorcheight / 10),
+		6,
 		self.editorcheight
 	)
 	
@@ -224,13 +256,13 @@ function GUIGenerator:in_1_bang()
 		1,
 		((self.editorcwidth + self.editormx) * self.editorcx) + self.editormx,
 		self.editormy,
-		self.editorcwidth * 1.25,
-		self.editorcheight * 1.25,
+		self.editorcwidth * 1.5,
+		self.editorcheight * 2,
 		self.editormx,
 		self.editormy,
 		math.floor(self.editorcwidth / 50),
-		4 + math.floor(self.editorcheight / 10),
-		math.floor(self.editorcheight * 1.25)
+		8,
+		math.floor(self.editorcheight * 1.5)
 	)
 
 end

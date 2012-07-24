@@ -174,7 +174,7 @@ end
 -- Update the note-item button
 function Editor:updateItemButton()
 
-	pd.send("phrases-editor-item-button", "color", {self.color[2][1], self.color[4][1]})
+	pd.send("phrases-editor-item-button", "color", {self.color[2][2], self.color[4][2]})
 	pd.send("phrases-editor-item-button", "label", {"Item " .. self.pointer})
 	
 end
@@ -200,7 +200,7 @@ function Editor:updateTickButton()
 		end
 	end
 	
-	pd.send("phrases-editor-tick-button", "color", {self.color[2][1], self.color[4][1]})
+	pd.send("phrases-editor-tick-button", "color", {self.color[2][2], self.color[4][2]})
 	pd.send("phrases-editor-tick-button", "label", {"Tick " .. tcount})
 
 end
@@ -281,6 +281,13 @@ function Editor:updateSpacingButton()
 
 end
 
+-- Update the editor's background color
+function Editor:updateBackground()
+
+	pd.send("phrases-editor-bg", "color", {self.color[3][1]})
+
+end
+
 -- Update all cells and buttons in the editor GUI
 function Editor:updateEditorGUI()
 
@@ -300,6 +307,8 @@ function Editor:updateEditorGUI()
 			self:updateButton(ex, ey, self.key, self.pointer)
 		end
 	end
+	
+	self:updateBackground()
 
 end
 
@@ -786,7 +795,7 @@ function Editor:in_1_symbol(s)
 		if self.recording == true then
 		
 			table.insert(self.phrase[self.key].notes, self.pointer, {-1})
-			self.phrase[self.key].notes, self.phrase[self.key + 1].notes = self.phrase[self.key + 1].notes, self.phrase[self.key].notes
+			self.phrase[self.key].notes[self.pointer], self.phrase[self.key].notes[self.pointer + 1] = self.phrase[self.key].notes[self.pointer + 1], self.phrase[self.key].notes[self.pointer]
 			self.pointer = self.pointer + 1
 			
 			pd.post("Inserted note -1 at point " .. self.pointer .. " in phrase " .. self.key)
