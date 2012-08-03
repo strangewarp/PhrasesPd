@@ -367,20 +367,21 @@ function Editor:initialize(sel, atoms)
 	-- 1. Key commands
 	-- 2. MIDI-IN
 	-- 3. Monome button
-	-- 4. loadname name
-	-- 5. savename name
-	-- 6. Global BPM
-	-- 7. Global TPB
-	-- 8. Global GATE
-	-- 9. Grid X cells
-	-- 10. Grid Y cells
-	-- 11. Editor X cells
-	-- 12. Editor Y cells
-	-- 13. Editor GUI color 1
-	-- 14. Editor GUI color 2
-	-- 15. Editor GUI color 3
-	-- 16. Editor GUI color 4
-	self.inlets = 16
+	-- 4. loadfile name
+	-- 5. savefile name
+	-- 6. savepath name
+	-- 7. Global BPM
+	-- 8. Global TPB
+	-- 9. Global GATE
+	-- 10. Grid X cells
+	-- 11. Grid Y cells
+	-- 12. Editor X cells
+	-- 13. Editor Y cells
+	-- 14. Editor GUI color 1
+	-- 15. Editor GUI color 2
+	-- 16. Editor GUI color 3
+	-- 17. Editor GUI color 4
+	self.inlets = 17
 	
 	-- 1. Note-send out (to delayed note-off as well)
 	self.outlets = 1
@@ -393,9 +394,10 @@ function Editor:initialize(sel, atoms)
 	self.editorx = 6
 	self.editory = 32
 	
-	-- Default file names
-	self.loadname = "phrases-default-testfile.lua"
-	self.savename = "phrases-default-testfile.lua"
+	-- Default file names and paths
+	self.loadname = "default-savefile.lua"
+	self.savename = "default-savefile.lua"
+	self.filepath = ""
 	
 	-- Default BPM, TPB, GATE values
 	self.bpm = 120
@@ -652,7 +654,7 @@ function Editor:in_1_symbol(s)
 		o = o .. "\n}\n" -- Close entire savedata table
 		
 		-- Use complex Lua file manipulation, to prevent weird file errors while Pd is running
-		local f = assert(io.open(self.savename, "w"))
+		local f = assert(io.open(self.filepath .. self.savename, "w"))
 		f:write(o)
 		f:close()
 		
@@ -940,45 +942,53 @@ end
 -- Get savename name
 function Editor:in_5_list(s)
 	self.savename = s[1]
+	pd.post("Current savefile name (including path) is now: " .. self.filepath .. self.savename)
+	pd.post("NOTE: File has NOT been saved! To save to this savefile, press: Shift-?-|")
+end
+
+-- Get savefile path
+function Editor:in_6_list(s)
+	-- table.concat() is necessary, because Pd will interpret paths that contain spaces as lists
+	self.filepath = table.concat(s, " ")
 end
 
 -- Get global BPM value
-function Editor:in_6_float(f)
+function Editor:in_7_float(f)
 	self.bpm = f
 end
 
 -- Get global TPB value
-function Editor:in_7_float(f)
+function Editor:in_8_float(f)
 	self.tpb = f
 end
 
 -- Get global GATE value
-function Editor:in_8_float(f)
+function Editor:in_9_float(f)
 	self.gate = f
 end
 
 -- Get global grid-width
-function Editor:in_9_float(x)
+function Editor:in_10_float(x)
 	self.gridx = x
 end
 
 -- Get global grid-height
-function Editor:in_10_float(y)
+function Editor:in_11_float(y)
 	self.gridy = y
 end
 
 -- Get global editor-width
-function Editor:in_11_float(x)
+function Editor:in_12_float(x)
 	self.editorx = x
 end
 
 -- Get global editor-height
-function Editor:in_12_float(y)
+function Editor:in_13_float(y)
 	self.editory = y
 end
 
 -- Get GUI color-values
-function Editor:in_13_color(c)
+function Editor:in_14_color(c)
 
 	self:updateColor(1, c[1])
 	
@@ -987,7 +997,7 @@ function Editor:in_13_color(c)
 end
 
 -- Get GUI color-value
-function Editor:in_14_color(c)
+function Editor:in_15_color(c)
 
 	self:updateColor(2, c[1])
 	
@@ -996,7 +1006,7 @@ function Editor:in_14_color(c)
 end
 
 -- Get GUI color-value
-function Editor:in_15_color(c)
+function Editor:in_16_color(c)
 
 	self:updateColor(3, c[1])
 	
@@ -1005,7 +1015,7 @@ function Editor:in_15_color(c)
 end
 
 -- Get GUI color-value
-function Editor:in_16_color(c)
+function Editor:in_17_color(c)
 
 	self:updateColor(4, c[1])
 	
