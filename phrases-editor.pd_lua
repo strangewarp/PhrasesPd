@@ -37,6 +37,7 @@ end
 
 
 
+-- Pd keeps the pound sign (#) as a reserved character, and throws in a glut of annoying backslashes if any pound signs are passed to its parser, so we'll just use flats for now.
 local notekeys = {
 	"C",
 	"Db", "D",
@@ -46,25 +47,6 @@ local notekeys = {
 	"Ab", "A",
 	"Bb", "B"
 }
-
-
-
--- Load a Lua savefile and return its table data
-local function loadTable(f)
-
-	local data = {}
-	
-	local fcheck = io.open(f, "r")
-	if fcheck ~= nil then
-		data = dofile(f)
-	else
-		pd.post("Error: Attempted to load a file that doesn't exist!")
-	end
-	io.close(f)
-	
-	return data
-	
-end
 
 
 
@@ -132,7 +114,9 @@ function Editor:updateButton(cellx, celly, k, p) -- editor x pointer, editor y p
 	local offsety = math.floor(self.editory / 4)
 	
 	local notex = (cellx + k) - offsetx
-	if (notex < 1) or (notex > gsize) then
+	if (notex < 1)
+	or (notex > gsize)
+	then
 		notex = ((notex - 1) % gsize) + 1
 	end
 	
@@ -144,29 +128,51 @@ function Editor:updateButton(cellx, celly, k, p) -- editor x pointer, editor y p
 	end
 	
 	local notey = (celly + p) - offsety
-	if (notey < 1) or (notey > notenum) then
+	if (notey < 1)
+	or (notey > notenum)
+	then
 		notey = ((notey - 1) % notenum) + 1
 	end
 	
 	local note = self.phrase[notex].notes[notey]
 	
-	-- Change the message's MIDI-NOTE pitch byte, if pitchview is set to pitch mode. Else report the entire message as data
-	if (note[1] >= 128)
-	and (note[1] <= 159)
-	and (self.pitchview == true)
-	then
-		message = notey .. string.rep(".", string.len(tostring(#self.phrase[notex].notes)) - (string.len(tostring(notey)) - 1))
-		message = message .. " " .. note[1] .. " " .. readableNote(note[2]) .. " " .. note[3]
+	-- Insert a number of periods that properly aligns the note with its column
+	message = notey .. string.rep(".", string.len(tostring(#self.phrase[notex].notes)) - (string.len(tostring(notey)) - 1))
+	
+	-- Make the relevant data bytes more human-readable, if the pitchview flag is true. Else return their internal values
+	if self.pitchview == true then
+	
+		if (note[1] >= 128)
+		and (note[1] <= 159)
+		then
+			message = message .. " " .. note[1] .. " " .. readableNote(note[2]) .. " " .. note[3]
+		elseif (note[1] >= 192)
+		and (note[1] <= 223)
+		then
+			message = message .. " " .. note[1] .. " " .. note[2]
+		elseif note[1] == -1 then
+			message = message .. " --"
+		elseif note[1] == -5 then
+			message = message .. " BPM " .. note[2]
+		elseif note[1] == -6 then
+			message = message .. " TPB " .. note[2]
+		elseif note[1] == -7 then
+			message = message .. " GATE " .. note[2]
+		else
+			message = message .. " " .. table.concat(note, " ")
+		end
+	
 	else
-		message = notey .. string.rep(".", string.len(tostring(#self.phrase[notex].notes)) - (string.len(tostring(notey)) - 1))
 		message = message .. " " .. table.concat(note, " ")
 	end
 	
 	if note[1] == -1 then -- Blank note color
 		col = self.color[3]
-	elseif (note[1] >= 128) and (note[1] <= 159) then -- Note-on / note-off color
+	elseif (note[1] >= 128)
+	and (note[1] <= 159)
+	then -- Note-on / note-off color
 		col = self.color[1]
-	else -- Other MIDI commands color
+	else -- Other commands color
 		col = self.color[2]
 	end
 	
@@ -361,8 +367,8 @@ function Editor:initialize(sel, atoms)
 	-- 1. Key commands
 	-- 2. MIDI-IN
 	-- 3. Monome button
-	-- 4. Loadfile name
-	-- 5. Savefile name
+	-- 4. loadname name
+	-- 5. savename name
 	-- 6. Global BPM
 	-- 7. Global TPB
 	-- 8. Global GATE
@@ -388,8 +394,8 @@ function Editor:initialize(sel, atoms)
 	self.editory = 32
 	
 	-- Default file names
-	self.loadfile = "phrases-default-testfile.lua"
-	self.savefile = "phrases-default-testfile.lua"
+	self.loadname = "phrases-default-testfile.lua"
+	self.savename = "phrases-default-testfile.lua"
 	
 	-- Default BPM, TPB, GATE values
 	self.bpm = 120
@@ -497,7 +503,7 @@ function Editor:in_1_symbol(s)
 		
 		self:updateEditorGUI()
 	
-	elseif s == "PHRASES-LOAD" then -- Load a Lua savefile into local variables
+	elseif s == "PHRASES-LOAD" then -- Load a Lua savename into local variables
 	
 		-- Check all current phrases for activity, and change the flag appropriately
 		local activecheck = false
@@ -510,31 +516,30 @@ function Editor:in_1_symbol(s)
 		-- Does not require recording-mode to be on; but no phrases must currently be active, in order to prevent errors
 		if activecheck == false then
 		
-			local lfunc = assert(loadfile(self.loadfile))
-			local ltab = lfunc()
+			-- self:dofile() is currently the only serviceable dofile method in pdlua, and apparently it will be changed in a later version of pdlua, so this load function will probably have to be changed later as well.
+			local ltab = self:dofile(self.loadname)
 			
+			-- Load all data tables
 			for k, v in pairs(ltab) do
-				if k ~= "phrase" then
-					self[k] = v
-				end
+				pd.post("loading: " .. k .. " - " .. tostring(v))
+				self[k] = v
 			end
 			
-			for i = 1, self.gridx * self.gridy do
-				self.phrase[i].transfer = ltab.phrase[i].transfer
-				self.phrase[i].notes = ltab.phrase[i].notes
-			end
-		
+			-- Reset the editor's key and pointer, to prevent out-of-bounds errors
+			self.key = 1
+			self.pointer = 1
+			
 			self:updateEditorGUI()
 			
-			pd.post("Phrases Editor: Loaded the contents of " .. self.loadfile .. "!")
-	
+			pd.post("Phrases Editor: Loaded the contents of " .. self.loadname .. "!")
+			
 		else
 		
 			pd.post("Couldn't load file: Some phrases are still active!")
 		
 		end
 		
-	elseif s == "PHRASES-SAVE" then -- Save data as a Lua table in the savefile; custom SAVE command generated through Pd
+	elseif s == "PHRASES-SAVE" then -- Save data as a Lua table in the savename
 	
 		local o = "return\n\n" -- Make the table executable, for the load function
 
@@ -549,7 +554,7 @@ function Editor:in_1_symbol(s)
 		-- Add all phrase data to the long string
 		for k, v in ipairs(self.phrase) do
 			
-			o = o .. "\t\t[\"" .. k .. "\"] = {\n" -- Phrase number
+			o = o .. "\t\t[" .. k .. "] = {\n" -- Phrase number
 			
 			o = o .. "\t\t\t[\"transfer\"] = {" -- Phrase transference
 			for k2, v2 in ipairs(v.transfer) do
@@ -613,7 +618,7 @@ function Editor:in_1_symbol(s)
 				then -- If any notes in the previous line fell on a gate tick, offer up some metadata
 					if sgnum > 0 then
 						o = o .. " -- Gate tick (note " .. sgnum .. ")"
-						o = o .. " ((" .. self.gate .. "*" .. math.floor((sgnum - 1) / self.gate) .. ")+1)"
+						o = o .. " (" .. self.gate .. " * " .. math.floor((sgnum - 1) / self.gate) .. " + 1)"
 						o = o .. " (line item " .. (sgitem + 1) .. ")"
 						if sskip > 0 then
 							o = o .. " (skipped " .. sskip .. " instant commands)"
@@ -647,9 +652,10 @@ function Editor:in_1_symbol(s)
 		o = o .. "\n}\n" -- Close entire savedata table
 		
 		-- Use complex Lua file manipulation, to prevent weird file errors while Pd is running
-		local f = assert(io.open(self.savefile, "w"))
+		local f = assert(io.open(self.savename, "w"))
 		f:write(o)
 		f:close()
+		
 		pd.post("Data saved!")
 	
 	elseif (s == "Down") -- Advance the note pointer
@@ -774,14 +780,14 @@ function Editor:in_1_symbol(s)
 		
 	elseif s == "[" then -- Lower octave
 	
-		self.octave = (self.octave - 1) % 10
+		self.octave = (self.octave - 1) % 12
 		
 		self:updateOctaveButton()
 		pd.post("Octave set to " .. self.octave)
 		
 	elseif s == "]" then -- Raise octave
 	
-		self.octave = (self.octave + 1) % 10
+		self.octave = (self.octave + 1) % 12
 		
 		self:updateOctaveButton()
 		pd.post("Octave set to " .. self.octave)
@@ -926,14 +932,14 @@ function Editor:in_3_float(f)
 
 end
 
--- Get loadfile name
-function Editor:in_4_symbol(s)
-	self.loadfile = s
+-- Get loadname name
+function Editor:in_4_list(s)
+	self.loadname = s[1]
 end
 
--- Get savefile name
-function Editor:in_5_symbol(s)
-	self.savefile = s
+-- Get savename name
+function Editor:in_5_list(s)
+	self.savename = s[1]
 end
 
 -- Get global BPM value
