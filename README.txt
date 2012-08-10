@@ -5,6 +5,7 @@ MOST FEATURES ARE BUGGY, MINIMALLY/UNTESTED, OR MISSING
 
 IF YOU TRY USING THIS FOR ANYTHING RIGHT NOW, YOU ARE BEING SILLY
 
+Do please note: Currently, only the PhrasesPd Editor is functional. Feel free to play around with it! I still have to rewrite and debug the PhrasesPd Sequencer in Lua, and write all the MIDI/OSC connectors in Pd. But since the sequencer is heavily derived from code I've already written and rewritten several times in another language, it ought to go moderately quickly.
 
 
 
@@ -16,8 +17,12 @@ It has an integrated sequence editor, which is controlled by a combination of co
 
 Sequences are saved as Lua table files, in a manner that is both executable and decently human-readable. In the future, this may change to YAML or JSON or something, but if so I'll write a converter.
 
+
+
 Dependencies:
 Puredata-extended 0.43-1 beta
+
+
 
 Installation
 
@@ -26,6 +31,8 @@ Installation
 3. Run "phrasespd.pd" in PureData.
 4. Change the settings to reflect your setup, in the phrases-prefs and phrases-gui-prefs windows.
 5. You can now begin assembling phrases of MIDI data in the PhrasesPd editor.
+
+
 
 Editor Commands
 

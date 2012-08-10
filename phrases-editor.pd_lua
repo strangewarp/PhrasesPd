@@ -17,7 +17,6 @@ local cmdtable = tabs.cmdtable
 local cmdnames = tabs.cmdnames
 local trnames = tabs.trnames
 local modenames = tabs.modenames
-local defaultvals = tabs.defaultvals
 
 
 
@@ -447,10 +446,15 @@ function Editor:initialize(sel, atoms)
 		{-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
 	}
 	
-	self.phrase = {} -- For storing all phrase data
-	-- Build the phrase-data table, and populate it with defaults
-	for n = 1, self.gridx * self.gridy do
-		self.phrase[n] = defaultvals
+	self.phrase = {}
+	for i = 1, self.gridx * self.gridy do -- Set default phrase data
+		self.phrase[i] = {
+			transfer = { 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, },
+			tdir = 5,
+			notes = { {-1}, {-1}, {-1}, {-1}, },
+			pointer = 1,
+			active = false,
+		}
 	end
 	
 	self.key = 1 -- Currently active phrase
@@ -988,14 +992,17 @@ function Editor:in_3_float(f)
 
 end
 
--- Get loadname name
+-- Get loadfile name
 function Editor:in_4_list(s)
-	self.loadname = s[1]
+	-- table.concat() is necessary, because Pd will interpret paths that contain spaces as lists
+	self.loadname = table.concat(s, " ")
+	pd.post("Current loadfile name is now: " .. self.loadname)
 end
 
--- Get savename name
+-- Get savefile name
 function Editor:in_5_list(s)
-	self.savename = s[1]
+	-- table.concat() is necessary, because Pd will interpret paths that contain spaces as lists
+	self.savename = table.concat(s, " ")
 	pd.post("Current savefile name (including path) is now: " .. self.filepath .. self.savename)
 	pd.post("NOTE: File has NOT been saved! To save to this savefile, press: Shift-?-|")
 end
@@ -1004,6 +1011,7 @@ end
 function Editor:in_6_list(s)
 	-- table.concat() is necessary, because Pd will interpret paths that contain spaces as lists
 	self.filepath = table.concat(s, " ")
+	pd.post("Current savefile path is now: " .. self.filepath)
 end
 
 -- Get global BPM value

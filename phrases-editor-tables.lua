@@ -103,21 +103,5 @@ return {
 		"note",
 		"tr",
 	},
-
-	-- Default parameters for an empty phrase
-	defaultvals = {
-		["transfer"] = {
-			0, 0, 0,
-			0, 1, 0,
-			0, 0, 0,
-			1,
-		},
-		["notes"] = {
-			{-1}, {-1}, {-1}, {-1},
-		},
-		["tdir"] = 5,
-		["pointer"] = 1,
-		["active"] = false,
-	},
-
+	
 }
