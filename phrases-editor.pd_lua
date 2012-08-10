@@ -2,51 +2,41 @@
 
 Editor object, designed for the particular requirements of PhrasesPd.
 
-REMEMBER: Each phrase can only have notes of one channel, to prevent sustain trainwrecks
-
-REMEMBER: Transference, and the toggling of recording, should be handled in Pd itself
-
 --]]
 
 local Editor = pd.Class:new():register("phrases-editor")
 
 
 
-local kbkeys = {
-	"z", "s", "x", "d", "c", "v", "g", "b", "h", "n", "j", "m",
-	{",", "q"},
-	{"l", "2"},
-	{".", "w"},
-	{";", "3"},
-	{"/", "e"},
-	"r", "5", "t", "6", "y", "7", "u", "i", "9", "o", "0", "p"
-}
+-- Load the code's data tables in a tidy manner
+local tabs = require("phrases-editor-tables")
+local kbnames = tabs.kbnames
+local kbhash = tabs.kbhash(kbnames)
+local notenames = tabs.notenames
+local cmdtable = tabs.cmdtable
+local cmdnames = tabs.cmdnames
+local trnames = tabs.trnames
+local modenames = tabs.modenames
+local defaultvals = tabs.defaultvals
 
-local kbhash = {}
 
--- Build a hashmap of keyboard-keys and MIDI-offset values, for the computer-keyboard section of the editor
-for k, v in ipairs(kbkeys) do
-	if #v > 1 then
-		for _, vv in pairs(v) do
-			kbhash[vv] = k - 1
-		end
-	else
-		kbhash[v] = k - 1
+
+-- Check whether a value falls within a particular range; return true or false
+local function rangeCheck(val, low, high)
+
+	if high < low then
+		low, high = high, low
 	end
+
+	if (val >= low)
+	and (val <= high)
+	then
+		return true
+	end
+	
+	return false
+
 end
-
-
-
--- Pd keeps the pound sign (#) as a reserved character, and throws in a glut of annoying backslashes if any pound signs are passed to its parser, so we'll just use flats for now.
-local notekeys = {
-	"C",
-	"Db", "D",
-	"Eb", "E",
-	"F",
-	"Gb", "G",
-	"Ab", "A",
-	"Bb", "B"
-}
 
 
 
@@ -56,7 +46,7 @@ local function readableNote(f)
 	local nkey = (f % 12) + 1
 	local nval = math.floor(f / 12)
 	
-	local mout = notekeys[nkey]
+	local mout = notenames[nkey]
 	
 	if string.len(mout) == 1 then
 		mout = mout .. "-"
@@ -65,25 +55,6 @@ local function readableNote(f)
 	mout = mout .. nval
 	
 	return mout
-	
-end
-
-
-
--- Set default parameters for an empty phrase
-function Editor:setDefaults(k)
-
-	self.phrase[k] = {}
-	self.phrase[k].transfer = {}
-	for i = 1, 10 do -- Spawn all transference slots with empty values
-		self.phrase[k].transfer[i] = 0
-	end
-	self.phrase[k].transfer[5] = 1 -- Default behavior: stationary transference
-	self.phrase[k].transfer[10] = 1 -- Default behavior: continue looping when on
-	self.phrase[k].tdir = 5
-	self.phrase[k].notes = { {-1}, {-1}, {-1}, {-1} }
-	self.phrase[k].pointer = 1
-	self.phrase[k].active = false
 	
 end
 
@@ -101,15 +72,17 @@ function Editor:updateColor(ckey, color)
 	
 end
 
+
+
 -- Update the color and contents of a cell in the editor panel
-function Editor:updateButton(cellx, celly, k, p) -- editor x pointer, editor y pointer, phrase key, note pointer
+function Editor:updateNoteButton(cellx, celly, k, p) -- editor x pointer, editor y pointer, phrase key, note pointer
 
 	local cout = -1 -- Color-out value
 	local mcout = -1 -- Message-color-out value
 	local col = {} -- Note-cell color set: blank note
 	local message = ""
 	
-	local gsize = (self.gridx * self.gridy)
+	local gsize = self.gridx * self.gridy
 	local offsetx = math.ceil(self.editorx / 2)
 	local offsety = math.floor(self.editory / 4)
 	
@@ -136,29 +109,25 @@ function Editor:updateButton(cellx, celly, k, p) -- editor x pointer, editor y p
 	
 	local note = self.phrase[notex].notes[notey]
 	
-	-- Insert a number of periods that properly aligns the note with its column
+	-- Insert a number of periods that properly aligns the note with its column's max note value
 	message = notey .. string.rep(".", string.len(tostring(#self.phrase[notex].notes)) - (string.len(tostring(notey)) - 1))
 	
 	-- Make the relevant data bytes more human-readable, if the pitchview flag is true. Else return their internal values
 	if self.pitchview == true then
 	
-		if (note[1] >= 128)
-		and (note[1] <= 159)
-		then
+		if rangeCheck(note[1], 128, 159) then -- All NOTE-ONs and NOTE-OFFs
 			message = message .. " " .. note[1] .. " " .. readableNote(note[2]) .. " " .. note[3]
-		elseif (note[1] >= 192)
-		and (note[1] <= 223)
-		then
+		elseif rangeCheck(note[1], 192, 223) then -- All two-byte notes
 			message = message .. " " .. note[1] .. " " .. note[2]
-		elseif note[1] == -1 then
+		elseif note[1] == -1 then -- Empty notes
 			message = message .. " --"
-		elseif note[1] == -5 then
+		elseif note[1] == -5 then -- Local BPM
 			message = message .. " BPM " .. note[2]
-		elseif note[1] == -6 then
+		elseif note[1] == -6 then -- Local TPB
 			message = message .. " TPB " .. note[2]
-		elseif note[1] == -7 then
+		elseif note[1] == -7 then -- Local GATE
 			message = message .. " GATE " .. note[2]
-		else
+		else -- All other three-byte MIDI messages
 			message = message .. " " .. table.concat(note, " ")
 		end
 	
@@ -166,35 +135,77 @@ function Editor:updateButton(cellx, celly, k, p) -- editor x pointer, editor y p
 		message = message .. " " .. table.concat(note, " ")
 	end
 	
-	if note[1] == -1 then -- Blank note color
-		col = self.color[3]
-	elseif (note[1] >= 128)
-	and (note[1] <= 159)
-	then -- Note-on / note-off color
-		col = self.color[1]
-	else -- Other commands color
-		col = self.color[2]
-	end
+	if self.inputmode == "tr" then -- Show the transference panel when transference mode is active
 	
-	if cellx == offsetx then -- For the active phrase, use regular colors
-		cout = col[1]
-		mcout = self.color[4][1]
-	else -- For all inactive notes, use dark colors
-		cout = col[3]
-		mcout = self.color[4][3]
-	end
+		local tr = self.phrase[notex].transfer
+		local nakedy = (celly - offsety) + 1
 		
-	if notey == 1 then -- For all phrase-starting notes, use bright colors
-		cout = col[2]
-		mcout = self.color[4][2]
-	end
+		if rangeCheck(nakedy, 1, 10) then
+		
+			if (tr[nakedy] >= 1)
+			or (self.pitchview == false)
+			then
+				message = nakedy .. ". " .. tr[nakedy]
+			else
+				message = nakedy .. ". --"
+			end
+			
+			mcout = self.color[4][1]
+			
+			if cellx == offsetx then -- Set active phrase's transference values to the main user-defined color
+				if (nakedy == self.channel)
+				or (
+					(nakedy == 10)
+					and (self.channel >= 10)
+				)
+				then
+					cout = self.color[1][1]
+				else
+					cout = self.color[1][3]
+				end
+			else -- Set other transference values to the secondary user-defined color
+				cout = self.color[2][1]
+			end
+			
+		else
+			cout = self.color[3][3]
+			mcout = self.color[3][1]
+		end
+		
+		pd.send((celly - 1) .. "-" .. (cellx - 1) .. "-editor-button", "color", {cout, mcout})
+		pd.send((celly - 1) .. "-" .. (cellx - 1) .. "-editor-button", "label", {message})
 	
-	if celly == offsety then -- Reverse color values on the active row
-		cout, mcout = mcout, cout
-	end
+	else -- Display colors normally when in other view modes
 	
-	pd.send((celly - 1) .. "-" .. (cellx - 1) .. "-editor-button", "color", {cout, mcout})
-	pd.send((celly - 1) .. "-" .. (cellx - 1) .. "-editor-button", "label", {message})
+		if note[1] == -1 then -- Blank note color
+			col = self.color[3]
+		elseif rangeCheck(note[1], 128, 159) then -- Note-on / note-off color
+			col = self.color[1]
+		else -- Other commands color
+			col = self.color[2]
+		end
+		
+		if cellx == offsetx then -- For the active phrase, use regular colors
+			cout = col[1]
+			mcout = self.color[4][1]
+		else -- For all inactive notes, use dark colors
+			cout = col[3]
+			mcout = self.color[4][3]
+		end
+			
+		if notey == 1 then -- For all phrase-starting notes, use bright colors
+			cout = col[2]
+			mcout = self.color[4][2]
+		end
+		
+		if celly == offsety then -- Reverse color values on the active row
+			cout, mcout = mcout, cout
+		end
+		
+		pd.send((celly - 1) .. "-" .. (cellx - 1) .. "-editor-button", "color", {cout, mcout})
+		pd.send((celly - 1) .. "-" .. (cellx - 1) .. "-editor-button", "label", {message})
+	
+	end
 
 end
 
@@ -236,10 +247,7 @@ function Editor:updateTickButton()
 	for i = 1, #self.phrase[self.key].notes do -- Count which tick the pointer is on, as opposed to which MIDI command
 		nbyte = self.phrase[self.key].notes[i][1]
 		if (nbyte == -1)
-		or (
-			(nbyte >= 128)
-			and (nbyte <= 159)
-		)
+		or rangeCheck(nbyte, 128, 159)
 		then
 			tcount = tcount + 1
 			if i >= self.pointer then
@@ -269,39 +277,41 @@ end
 -- Update the MIDI-channel button
 function Editor:updateChannelButton()
 
+	local chbcolor = -1
+	local chbmessage = ""
+
+	if self.inputmode == "tr" then
+		chbcolor = self.color[1][1]
+		chbmessage = "Tr: " .. trnames[math.min(math.max(self.channel, 1), 10)]
+	else
+		chbcolor = self.color[2][1]
+		chbmessage = "Chan " .. self.channel
+	end
+	
 	pd.send("phrases-editor-channel-button", "color", {self.color[2][1], self.color[4][1]})
-	pd.send("phrases-editor-channel-button", "label", {"Chan " .. self.channel})
+	pd.send("phrases-editor-channel-button", "label", {chbmessage})
 
 end
 
 -- Update the MIDI-command button
 function Editor:updateCommandButton()
 
-	if self.command == 128 then
-		pd.send("phrases-editor-command-button", "color", {self.color[1][1], self.color[4][1]})
-		pd.send("phrases-editor-command-button", "label", {"Cmd: NOTE-OFF"})
-	elseif self.command == 144 then
-		pd.send("phrases-editor-command-button", "color", {self.color[1][1], self.color[4][1]})
-		pd.send("phrases-editor-command-button", "label", {"Cmd: NOTE-ON"})
-	elseif self.command == 160 then
-		pd.send("phrases-editor-command-button", "color", {self.color[2][1], self.color[4][1]})
-		pd.send("phrases-editor-command-button", "label", {"Cmd: POLY PRESSURE"})
-	elseif self.command == 176 then
-		pd.send("phrases-editor-command-button", "color", {self.color[2][1], self.color[4][1]})
-		pd.send("phrases-editor-command-button", "label", {"Cmd: CTRL CHANGE"})
-	elseif self.command == 192 then
-		pd.send("phrases-editor-command-button", "color", {self.color[2][1], self.color[4][1]})
-		pd.send("phrases-editor-command-button", "label", {"Cmd: PROG CHANGE"})
-	elseif self.command == 208 then
-		pd.send("phrases-editor-command-button", "color", {self.color[2][1], self.color[4][1]})
-		pd.send("phrases-editor-command-button", "label", {"Cmd: MONO PRESSURE"})
-	elseif self.command == 224 then
-		pd.send("phrases-editor-command-button", "color", {self.color[2][1], self.color[4][1]})
-		pd.send("phrases-editor-command-button", "label", {"Cmd: PITCH BEND"})
-	elseif self.command == 240 then
-		pd.send("phrases-editor-command-button", "color", {self.color[2][1], self.color[4][1]})
-		pd.send("phrases-editor-command-button", "label", {"Cmd: SYSTEM"})
+	local cmdkey = 1
+	for k, v in pairs(cmdtable) do
+		if v == self.command then
+			cmdkey = k
+		end
 	end
+
+	local cmdbcol = self.color[2][1]
+	if rangeCheck(self.command, -2, -4)
+	or rangeCheck(self.command, 128, 144)
+	then
+		cmdbcol = self.color[1][1]
+	end
+
+	pd.send("phrases-editor-command-button", "color", {cmdbcol, self.color[4][1]})
+	pd.send("phrases-editor-command-button", "label", {"Cmd: " .. cmdnames[cmdkey]})
 
 end
 
@@ -329,6 +339,30 @@ function Editor:updateSpacingButton()
 
 end
 
+-- Update the global BPM button
+function Editor:updateGlobalBPMButton()
+
+	pd.send("phrases-editor-global-bpm-button", "color", {self.color[2][1], self.color[4][1]})
+	pd.send("phrases-editor-global-bpm-button", "label", {"BPM " .. self.bpm})
+
+end
+
+-- Update the global TPB button
+function Editor:updateGlobalTPBButton()
+
+	pd.send("phrases-editor-global-tpb-button", "color", {self.color[2][1], self.color[4][1]})
+	pd.send("phrases-editor-global-tpb-button", "label", {"TPB " .. self.tpb})
+
+end
+
+-- Update the global GATE button
+function Editor:updateGlobalGateButton()
+
+	pd.send("phrases-editor-global-gate-button", "color", {self.color[2][1], self.color[4][1]})
+	pd.send("phrases-editor-global-gate-button", "label", {"Gate " .. self.gate})
+
+end
+
 -- Update the editor's background color
 function Editor:updateBackground()
 
@@ -349,10 +383,14 @@ function Editor:updateEditorGUI()
 	self:updateVelocityButton()
 	self:updateOctaveButton()
 	self:updateSpacingButton()
-
+	
+	self:updateGlobalBPMButton()
+	self:updateGlobalTPBButton()
+	self:updateGlobalGateButton()
+	
 	for ey = 1, self.editory do
 		for ex = 1, self.editorx do
-			self:updateButton(ex, ey, self.key, self.pointer)
+			self:updateNoteButton(ex, ey, self.key, self.pointer)
 		end
 	end
 	
@@ -410,11 +448,9 @@ function Editor:initialize(sel, atoms)
 	}
 	
 	self.phrase = {} -- For storing all phrase data
-	
 	-- Build the phrase-data table, and populate it with defaults
 	for n = 1, self.gridx * self.gridy do
-		self.phrase[n] = {}
-		self:setDefaults(n)
+		self.phrase[n] = defaultvals
 	end
 	
 	self.key = 1 -- Currently active phrase
@@ -431,7 +467,7 @@ function Editor:initialize(sel, atoms)
 	
 	self.inputmode = "note" -- Set to either 'note' or 'tr', depending on which input mode is active
 	
-	self.pitchview = "true" -- Flag that controls whether MIDI note pitch values are shown as pitches or numbers
+	self.pitchview = "true" -- Flag that controls whether editor data values are shown as pitches or numbers
 	
 	return true
 	
@@ -442,7 +478,7 @@ end
 -- Control-commands in
 function Editor:in_1_symbol(s)
 	
-	if not(kbhash[s] == nil) then -- Interpret all possible computer-keyboard-note keys
+	if kbhash[s] ~= nil then -- Interpret all possible computer-keyboard-note keys
 	
 		local putnote = kbhash[s] + (self.octave * 12)
 		
@@ -460,19 +496,25 @@ function Editor:in_1_symbol(s)
 					end
 				end
 				
-				table.insert(self.phrase[self.key].notes, self.pointer, {self.command + self.channel, putnote, self.velocity})
-				
-				-- Increase note pointer, and prevent overshooting the limit of the phrase's note array
-				self.pointer = (self.pointer + self.spacing) + 1
-				if self.pointer > #self.phrase[self.key].notes then
-					self.pointer = 1
+				if self.command >= 128 then -- All MIDI commands
+					table.insert(self.phrase[self.key].notes, self.pointer, {self.command + self.channel, putnote, self.velocity})
+					pd.post("Inserted command " .. (self.command + self.channel) .. " " .. putnote .. " " .. self.velocity)
+				elseif self.command == -2 then -- Global BPM
+					self.bpm = putnote + self.velocity
+					pd.send("phrases-bpm", "float", {putnote + self.velocity})
+				elseif self.command == -3 then -- Global TPB
+					self.tpb = putnote + self.velocity
+					pd.send("phrases-tpb", "float", {putnote + self.velocity})
+				elseif self.command == -4 then -- Global GATE
+					self.gate = putnote + self.velocity
+					pd.send("phrases-gate", "float", {putnote + self.velocity})
+				elseif rangeCheck(self.command, -5, -7) then -- Local BPM, local TPB, local GATE
+					table.insert(self.phrase[self.key].notes, self.pointer, {self.command, putnote + self.velocity, 0})
 				end
-
-				pd.post("Inserted note " .. (self.command + self.channel) .. " " .. putnote .. " " .. self.velocity)
 				
 			elseif self.inputmode == "tr" then -- Use incoming keycommands to set the weight of transference values
 			
-				if (self.channel >= 1) and (self.channel <= 9) then
+				if rangeCheck(self.channel, 1, 9) then
 					self.phrase[self.key].transfer[self.channel] = putnote
 					pd.post("Phrase " .. self.key .. ": Set transference direction " .. self.channel .. " to strength " .. putnote)
 				else
@@ -482,6 +524,19 @@ function Editor:in_1_symbol(s)
 			
 			end
 			
+			if (self.inputmode == "note")
+			and (
+				rangeCheck(self.command, 128, 255)
+				or rangeCheck(self.command, -5, -7)
+			)
+			then
+				-- Increase note pointer, and prevent overshooting the limit of the phrase's note array
+				self.pointer = (self.pointer + self.spacing) + 1
+				if self.pointer > #self.phrase[self.key].notes then
+					self.pointer = 1
+				end
+			end
+
 			self:updateEditorGUI()
 			
 		end
@@ -575,11 +630,8 @@ function Editor:in_1_symbol(s)
 			local sgitem = 0 -- Track which line items are the gate tick, for multi-item lines
 			for k2, v2 in ipairs(v.notes) do
 			
-				if (
-					(v2[1] >= 128)
-					and (v2[1] <= 159)
-				)
-				or (v2[1] == -1)
+				if (v2[1] == -1)
+				or rangeCheck(v2[1], 128, 159)
 				then -- Only increment the note-tracking variable if the note would stop the sequencer's iteration
 					sn = sn + 1
 				else
@@ -612,10 +664,7 @@ function Editor:in_1_symbol(s)
 				if (v.notes[k2 + 1] ~= nil) -- Peek at the next note to judge whether a newline is appropriate
 				and (
 					(v.notes[k2 + 1][1] ~= -1)
-					or (
-						(v.notes[k2 + 1][1] >= 128)
-						and (v.notes[k2 + 1] <= 159)
-					)
+					or rangeCheck(v.notes[k2 + 1][1], 128, 159)
 				)
 				then -- If any notes in the previous line fell on a gate tick, offer up some metadata
 					if sgnum > 0 then
@@ -709,11 +758,6 @@ function Editor:in_1_symbol(s)
 			self.key = 1
 		end
 		
-		-- If the new phrase has no notes, give it default values
-		if self.phrase[self.key].notes == nil then
-			self:setDefaults(self.key)
-		end
-		
 		-- Check pointer against the new phrase's notes, to prevent out-of-bounds errors
 		if self.pointer > #self.phrase[self.key].notes then
 			self.pointer = #self.phrase[self.key].notes
@@ -722,7 +766,7 @@ function Editor:in_1_symbol(s)
 		pd.send("phrases-editor-key-button", "label", {"Key " .. tostring(self.key)})
 		
 		self:updateEditorGUI()
-		pd.post("Active note: " .. self.pointer)
+		pd.post("Active phrase: " .. self.key)
 	
 	elseif s == "Next" then -- Decrease spacing
 	
@@ -738,42 +782,42 @@ function Editor:in_1_symbol(s)
 		self:updateSpacingButton()
 		pd.post("Spacing set to " .. self.spacing)
 	
-	elseif s == "~" then -- Decrease channel
+	elseif s == ";" then -- Decrease channel
 	
 		self.channel = (self.channel - 1) % 16
 		
-		self:updateChannelButton()
+		self:updateEditorGUI()
 		pd.post("MIDI Channel set to " .. self.channel)
 	
-	elseif s == "`" then -- Increase channel
+	elseif s == "'" then -- Increase channel
 	
 		self.channel = (self.channel + 1) % 16
 		
-		self:updateChannelButton()
+		self:updateEditorGUI()
 		pd.post("MIDI Channel set to " .. self.channel)
 		
-	elseif s == "_" then -- Decrease velocity
+	elseif s == "-" then -- Decrease velocity
 	
 		self.velocity = (self.velocity - 1) % 128
 		
 		self:updateVelocityButton()
 		pd.post("MIDI Velocity set to " .. self.velocity)
 	
-	elseif s == "-" then -- Increase velocity
+	elseif s == "=" then -- Increase velocity
 	
 		self.velocity = (self.velocity + 1) % 128
 		
 		self:updateVelocityButton()
 		pd.post("MIDI Velocity set to " .. self.velocity)
 		
-	elseif s == "+" then -- Decrease velocity by 10
+	elseif s == "_" then -- Decrease velocity by 10
 	
 		self.velocity = (self.velocity - 10) % 128
 		
 		self:updateVelocityButton()
 		pd.post("MIDI Velocity set to " .. self.velocity)
 	
-	elseif s == "=" then -- Increase velocity by 10
+	elseif s == "+" then -- Increase velocity by 10
 	
 		self.velocity = (self.velocity + 10) % 128
 		
@@ -794,27 +838,36 @@ function Editor:in_1_symbol(s)
 		self:updateOctaveButton()
 		pd.post("Octave set to " .. self.octave)
 		
-	elseif s == "Insert" then -- Toggle computer-keypress note type
+	elseif (s == "/") -- Toggle forwards between computer-keyboard-command types
+	or (s == ".") -- Or toggle backwards
+	then
 	
-		self.command = ((self.command + 16) % 128) + 128
-		
-		if self.command == 128 then
-			pd.post("MIDI Command type: NOTE-OFF (128)")
-		elseif self.command == 144 then
-			pd.post("MIDI Command type: NOTE-ON (144)")
-		elseif self.command == 160 then
-			pd.post("MIDI Command type: POLY-KEY PRESSURE (160)")
-		elseif self.command == 176 then
-			pd.post("MIDI Command type: CONTROL CHANGE (176)")
-		elseif self.command == 192 then
-			pd.post("MIDI Command type: PROGRAM CHANGE (192)")
-		elseif self.command == 208 then
-			pd.post("MIDI Command type: MONO KEY PERSSURE (208)")
-		elseif self.command == 224 then
-			pd.post("MIDI Command type: PITCH BEND (224)")
-		elseif self.command == 240 then
-			pd.post("MIDI Command type: SYSTEM (240)")
+		local cmdkey = 1
+		local cmdmod = 1
+		if s == "." then
+			cmdmod = -1
 		end
+		
+		for k, v in ipairs(cmdtable) do
+		
+			if v == self.command then
+			
+				cmdkey = k + cmdmod
+				if cmdkey < 1 then
+					cmdkey = #cmdtable
+				elseif cmdkey > #cmdtable then
+					cmdkey = 1
+				end
+				
+				do break end
+				
+			end
+			
+		end
+		
+		self.command = cmdtable[cmdkey]
+		
+		pd.post("Command type: " .. cmdnames[cmdkey] .. " (" .. self.command .. ")")
 		
 		self:updateCommandButton()
 	
@@ -856,17 +909,17 @@ function Editor:in_1_symbol(s)
 			
 		end
 	
-	elseif s == "Tab" then -- Toggle between transference and note modes
+	elseif (s == "Tab") then -- Toggle between input modes
 	
-		if self.inputmode == "note" then
-			self.inputmode = "tr"
-			pd.post("Input mode: Transference")
-		else
-			self.inputmode = "note"
-			pd.post("Input mode: Note")
+		for k, v in ipairs(modenames) do
+			if self.inputmode == v then
+				self.inputmode = modenames[(k % #modenames) + 1]
+				pd.post("Input mode: " .. self.inputmode)
+				do break end
+			end
 		end
 	
-		self:updateModeButton()
+		self:updateEditorGUI()
 	
 	elseif s == "Return" then
 	
@@ -891,11 +944,11 @@ function Editor:in_2_list(note)
 
 	if self.recording == true then -- Insert MIDI note at current pointer location
 	
-		if (not(self.channel == (note[1] % 16)))
-			and (note[1] >= 128)
+		if (self.channel ~= (note[1] % 16))
+		and (note[1] >= 128)
 		then
 			self.channel = note[1] % 16
-			pd.post("Default channel set to " .. self.channel)
+			self.command = note[1] - self.channel
 		end
 		
 		-- Insert a dummy byte at byte 3, if the MIDI message has two bytes
@@ -915,19 +968,20 @@ function Editor:in_2_list(note)
 		
 	end
 	
-	-- Send MIDI note, regardless of whether it was kept or discarded by the editor
-	self:outlet(1, "list", note)
+	-- Send all MIDI-ON notes, regardless of whether they were kept or discarded by the editor
+	if rangeCheck(note[1], 144, 159) then
+		self:outlet(1, "list", note)
+	end
 	
 end
 
--- Receive Monome button commant, to change the active phrase
+-- Receive Monome button command, to change the active phrase
 function Editor:in_3_float(f)
 
-	if f > 0 then
+	if (f >= 1)
+	and (f <= (self.gridx * self.gridy))
+	then
 		self.key = f
-		if self.phrase[f] == nil then
-			self:setDefaults(f)
-		end
 	end
 	
 	self:updateEditorGUI()
@@ -992,16 +1046,12 @@ function Editor:in_14_color(c)
 
 	self:updateColor(1, c[1])
 	
-	self:updateEditorGUI()
-	
 end
 
 -- Get GUI color-value
 function Editor:in_15_color(c)
 
 	self:updateColor(2, c[1])
-	
-	self:updateEditorGUI()
 	
 end
 
@@ -1010,15 +1060,11 @@ function Editor:in_16_color(c)
 
 	self:updateColor(3, c[1])
 	
-	self:updateEditorGUI()
-	
 end
 
 -- Get GUI color-value
 function Editor:in_17_color(c)
 
 	self:updateColor(4, c[1])
-	
-	self:updateEditorGUI()
 	
 end

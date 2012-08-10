@@ -25,6 +25,9 @@ local esnames = {
 	"phrases-editor-velocity-button",
 	"phrases-editor-octave-button",
 	"phrases-editor-spacing-button",
+	"phrases-editor-global-bpm-button",
+	"phrases-editor-global-tpb-button",
+	"phrases-editor-global-gate-button",
 }
 
 
