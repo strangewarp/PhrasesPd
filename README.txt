@@ -21,6 +21,8 @@ Sequences are saved as Lua table files, in a manner that is both executable and 
 
 Dependencies:
 Puredata-extended 0.43-1 beta
+pdlua
+mrpeach
 
 
 
@@ -35,4 +37,45 @@ Installation
 
 
 Editor Commands
+
+Choose savefile name - Click a savefile hotseat in the main window
+Save file - Shift-?-|
+
+Reload most recent file - Shift-Esc-Enter (WARNING: Erases any changes)
+Load file - Click a loadfile hotseat in the main window
+
+Toggle Recording/Play modes - Esc
+
+Previous note - Up arrow
+Next note - Down arrow
+First note - Home
+Last note - End
+
+Insert note - zsxdcvgbhnjm,lq2w3er5t6y7ui9o0p
+
+Delete note - Delete
+Insert blank note - Backspace
+
+Previous phrase - Left arrow
+Next phrase - Right arrow
+
+Increase spacing - PageDown
+Decrease spacing - PageUp
+
+MIDI channel +1 - '
+MIDI channel -1 - ;
+
+MIDI velocity +1 - =
+MIDI velocity -1 - -
+MIDI velocity +10 - +
+MIDI velocity -10 - _
+
+Octave +1 - ]
+Octave -1 - [
+
+Next command - /
+Previous command - .
+
+Toggle input mode - Insert
+Toggle number/pitch modes - Enter
 
