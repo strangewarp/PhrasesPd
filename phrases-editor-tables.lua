@@ -61,7 +61,7 @@ return {
 		160, -- MIDI poly-key pressure
 		176, -- MIDI control change
 		192, -- MIDI program change
-		208, -- MIDI mono key pressure
+		208, -- MIDI mono-key pressure
 		224, -- MIDI pitch bend
 		240, -- MIDI system message
 	},

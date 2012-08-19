@@ -192,7 +192,7 @@ function Editor:updateNoteButton(cellx, celly, k, p) -- editor x pointer, editor
 			mcout = self.color[4][3]
 		end
 			
-		if notey == 1 then -- For all phrase-starting notes, use bright colors
+		if ((notey - 1) % self.gate) == 0 then -- For all gate-key notes, use bright colors
 			cout = col[2]
 			mcout = self.color[4][2]
 		end
@@ -471,7 +471,7 @@ function Editor:initialize(sel, atoms)
 	
 	self.inputmode = "note" -- Set to either 'note' or 'tr', depending on which input mode is active
 	
-	self.pitchview = "true" -- Flag that controls whether editor data values are shown as pitches or numbers
+	self.pitchview = true -- Flag that controls whether editor data values are shown as pitches or numbers
 	
 	return true
 	
@@ -949,26 +949,36 @@ function Editor:in_2_list(note)
 			self.command = note[1] - self.channel
 		end
 		
+		if rangeCheck(note[1], 128, 159) then
+			-- Map the incoming note to the current octave setting, then bound its value to the 0-127 range
+			note[2] = (note[2] + (self.octave * 12)) % 128
+		end
+		
 		-- Insert a dummy byte at byte 3, if the MIDI message has two bytes
-		-- if (note[1] >= 192) and (note[1] <= 223) then
 		if #note < 3 then
 			note[3] = 0
 		end
 
-		for i = 1, self.spacing - 1 do
-			table.insert(self.phrase[self.key].notes, self.pointer, {-1})
+		-- Insert empty notes, if spacing is greater than 0
+		if self.spacing > 0 then
+			for i = 1, self.spacing do
+				table.insert(self.phrase[self.key].notes, self.pointer, {-1})
+			end
 		end
 		
+		-- Insert MIDI note
 		table.insert(self.phrase[self.key].notes, self.pointer, note)
-		pd.post("Inserted note " .. table.concat(note, " ") .. " at point " .. self.pointer .. " in phrase " .. self.key)
 		
+		-- Increase note pointer, and prevent overshooting the limit of the phrase's note array
+		self.pointer = (self.pointer + self.spacing) + 1
+		if self.pointer > #self.phrase[self.key].notes then
+			self.pointer = 1
+		end
+		
+		pd.post("Inserted note " .. table.concat(note, " ") .. " at point " .. self.pointer .. " in phrase " .. self.key)
+
 		self:updateEditorGUI()
 		
-	end
-	
-	-- Send all MIDI-ON notes, regardless of whether they were kept or discarded by the editor
-	if rangeCheck(note[1], 144, 159) then
-		self:outlet(1, "list", note)
 	end
 	
 end

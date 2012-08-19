@@ -100,7 +100,7 @@ return {
 	},
 	
 	INPUT_MODE_TOGGLE = {
-		"Tab",
+		"Insert",
 	},
 	
 	VIEW_MODE_TOGGLE = {
