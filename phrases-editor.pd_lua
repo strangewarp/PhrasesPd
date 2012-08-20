@@ -584,6 +584,11 @@ function Editor:in_1_list(list)
 			self.key = 1
 			self.pointer = 1
 			
+			-- Send updated global BPM/TPB/GATE information to the program's Pd side
+			pd.send("phrases-bpm", "float", {self.bpm})
+			pd.send("phrases-tpb", "float", {self.tpb})
+			pd.send("phrases-gate", "float", {self.gate})
+			
 			self:updateEditorGUI()
 			
 			pd.post("Phrases Editor: Loaded the contents of " .. self.loadname .. "!")
