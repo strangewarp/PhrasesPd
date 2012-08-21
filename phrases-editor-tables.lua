@@ -97,8 +97,16 @@ return {
 		"Down-Right",
 		"Persistence",
 	},
+	
+	-- Table of MIDI-input catching modes, which are tabbed through by the user and acted upon by other code
+	catchtypes = {
+		"all",
+		"no-offs",
+		"notes",
+		"ignore",
+	},
 
-	-- Table of the various input modes, which are toggled through by the user and acted upon by other code
+	-- Table of the various input modes, which are toggled by the user and acted upon by other code
 	modenames = {
 		"note",
 		"tr",

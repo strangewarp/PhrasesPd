@@ -16,6 +16,7 @@ local notenames = tabs.notenames
 local cmdtable = tabs.cmdtable
 local cmdnames = tabs.cmdnames
 local trnames = tabs.trnames
+local catchtypes = tabs.catchtypes
 local modenames = tabs.modenames
 
 
@@ -273,6 +274,25 @@ function Editor:updateModeButton()
 
 end
 
+-- Update the MIDI-catch-style button
+function Editor:updateMIDICatchButton()
+
+	if self.midicatch == "all" then
+		pd.send("phrases-editor-midicatch-button", "color", {self.color[2][2], self.color[4][2]})
+		pd.send("phrases-editor-midicatch-button", "label", {"Catch: All"})
+	elseif self.midicatch == "no-offs" then
+		pd.send("phrases-editor-midicatch-button", "color", {self.color[2][1], self.color[4][1]})
+		pd.send("phrases-editor-midicatch-button", "label", {"Catch: No Offs"})
+	elseif self.midicatch == "notes" then
+		pd.send("phrases-editor-midicatch-button", "color", {self.color[2][1], self.color[4][1]})
+		pd.send("phrases-editor-midicatch-button", "label", {"Catch: Notes"})
+	elseif self.midicatch == "ignore" then
+		pd.send("phrases-editor-midicatch-button", "color", {self.color[2][3], self.color[4][3]})
+		pd.send("phrases-editor-midicatch-button", "label", {"Catch: None"})
+	end
+
+end
+
 -- Update the MIDI-channel button
 function Editor:updateChannelButton()
 
@@ -377,6 +397,7 @@ function Editor:updateEditorGUI()
 	self:updateItemButton()
 	self:updateTickButton()
 	self:updateModeButton()
+	self:updateMIDICatchButton()
 	self:updateChannelButton()
 	self:updateCommandButton()
 	self:updateVelocityButton()
@@ -471,6 +492,8 @@ function Editor:initialize(sel, atoms)
 	
 	self.inputmode = "note" -- Set to either 'note' or 'tr', depending on which input mode is active
 	
+	self.midicatch = "all" -- Changes to "all", "notes", "no-offs", or "ignore", to set which sort of MIDI input is accepted
+	
 	self.pitchview = true -- Flag that controls whether editor data values are shown as pitches or numbers
 	
 	return true
@@ -529,13 +552,13 @@ function Editor:in_1_list(list)
 			
 			end
 			
+			-- If a new command was inserted, increase note pointer, and prevent overshooting the limit of the note array
 			if (self.inputmode == "note")
 			and (
 				rangeCheck(self.command, 128, 255)
 				or rangeCheck(self.command, -5, -7)
 			)
 			then
-				-- Increase note pointer, and prevent overshooting the limit of the phrase's note array
 				self.pointer = (self.pointer + self.spacing) + 1
 				if self.pointer > #self.phrase[self.key].notes then
 					self.pointer = 1
@@ -923,6 +946,29 @@ function Editor:in_1_list(list)
 		end
 	
 		self:updateEditorGUI()
+		
+	elseif (cmd == "MIDI_CATCHTYPE_BACK") -- Toggle between MIDI-catching modes
+	or (cmd == "MIDI_CATCHTYPE_FWD")
+	then
+	
+		for k, v in pairs(catchtypes) do
+		
+			if self.midicatch == v then
+			
+				if cmd == "MIDI_CATCHTYPE_BACK" then
+					self.midicatch = catchtypes[((k - 2) % #catchtypes) + 1]
+				else
+					self.midicatch = catchtypes[(k % #catchtypes) + 1]
+				end
+				
+				self:updateMIDICatchButton()
+				
+				pd.post("MIDI catch-type: " .. self.midicatch)
+				do break end
+				
+			end
+			
+		end
 	
 	elseif cmd == "VIEW_MODE_TOGGLE" then -- Toggle between number-view and pitch-view
 	
@@ -945,44 +991,61 @@ end
 -- Receive MIDI notes from a MIDI device
 function Editor:in_2_list(note)
 
-	if self.recording == true then -- Insert MIDI note at current pointer location
+	if self.recording == true then -- If recording-mode is toggled on...
 	
-		if (self.channel ~= (note[1] % 16))
-		and (note[1] >= 128)
+		if (self.midicatch == "all") -- And all incoming MIDI is captured...
+		or (
+			(self.midicatch == "notes") -- Or incoming MIDI notes are captured,
+			and rangeCheck(note[1], 128, 159) -- And the incoming MIDI byte is a MIDI note...
+		) or (
+			(self.midicatch == "no-offs") -- Or incoming MIDI bytes are captured except for note-offs,
+			and not(rangeCheck(note[1], 128, 143)) -- And the incoming MIDI byte is not a note-off...
+		)
 		then
-			self.channel = note[1] % 16
-			self.command = note[1] - self.channel
-		end
-		
-		if rangeCheck(note[1], 128, 159) then
-			-- Map the incoming note to the current octave setting, then bound its value to the 0-127 range
-			note[2] = (note[2] + (self.octave * 12)) % 128
-		end
-		
-		-- Insert a dummy byte at byte 3, if the MIDI message has two bytes
-		if #note < 3 then
-			note[3] = 0
-		end
-
-		-- Insert empty notes, if spacing is greater than 0
-		if self.spacing > 0 then
-			for i = 1, self.spacing do
-				table.insert(self.phrase[self.key].notes, self.pointer, {-1})
+	
+			-- Interpret the message's channel and command values, and save them internally
+			if (self.channel ~= (note[1] % 16))
+			and (note[1] >= 128)
+			then
+				self.channel = note[1] % 16
+				self.command = note[1] - self.channel
 			end
-		end
-		
-		-- Insert MIDI note
-		table.insert(self.phrase[self.key].notes, self.pointer, note)
-		
-		-- Increase note pointer, and prevent overshooting the limit of the phrase's note array
-		self.pointer = (self.pointer + self.spacing) + 1
-		if self.pointer > #self.phrase[self.key].notes then
-			self.pointer = 1
-		end
-		
-		pd.post("Inserted note " .. table.concat(note, " ") .. " at point " .. self.pointer .. " in phrase " .. self.key)
+			
+			if rangeCheck(note[1], 128, 159) then
+				-- Map the incoming note to the current octave setting, then bound its value to the 0-127 range
+				note[2] = (note[2] + (self.octave * 12)) % 128
+			end
+			
+			-- Insert a dummy byte at byte 3, if the MIDI message has two bytes
+			if #note < 3 then
+				note[3] = 0
+			end
 
-		self:updateEditorGUI()
+			-- Insert empty notes, if spacing is greater than 0
+			if self.spacing > 0 then
+				for i = 1, self.spacing do
+					table.insert(self.phrase[self.key].notes, self.pointer, {-1})
+				end
+			end
+			
+			-- Insert MIDI note
+			table.insert(self.phrase[self.key].notes, self.pointer, note)
+			
+			-- Increase note pointer, and prevent overshooting the limit of the phrase's note array
+			self.pointer = (self.pointer + self.spacing) + 1
+			if self.pointer > #self.phrase[self.key].notes then
+				self.pointer = 1
+			end
+			
+			pd.post("Inserted note " .. table.concat(note, " ") .. " at point " .. self.pointer .. " in phrase " .. self.key)
+
+			self:updateEditorGUI()
+			
+		else
+		
+			pd.post("Rejected incoming MIDI: " .. table.concat(note, " "))
+		
+		end
 		
 	end
 	

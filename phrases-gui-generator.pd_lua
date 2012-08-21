@@ -8,27 +8,10 @@ local GUIGenerator = pd.Class:new():register("phrases-gui-generator")
 
 
 
--- Names of grid-window side-panel buttons
-local gsnames = {
-	"phrases-grid-gate-button",
-}
-
--- Names of editor-window side-panel buttons
-local esnames = {
-	"phrases-editor-toggle-button",
-	"phrases-editor-key-button",
-	"phrases-editor-item-button",
-	"phrases-editor-tick-button",
-	"phrases-editor-mode-button",
-	"phrases-editor-channel-button",
-	"phrases-editor-command-button",
-	"phrases-editor-velocity-button",
-	"phrases-editor-octave-button",
-	"phrases-editor-spacing-button",
-	"phrases-editor-global-bpm-button",
-	"phrases-editor-global-tpb-button",
-	"phrases-editor-global-gate-button",
-}
+-- Load data tables for building the GUI's sidepanels
+local tab = require("phrases-gui-tables")
+local gsnames = tab.gsnames
+local esnames = tab.esnames
 
 
 

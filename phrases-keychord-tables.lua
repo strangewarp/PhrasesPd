@@ -17,6 +17,24 @@ return {
 		"Escape",
 	},
 	
+	MIDI_CATCHTYPE_BACK = {
+		"Shift",
+		"O",
+	},
+	
+	MIDI_CATCHTYPE_FWD = {
+		"Shift",
+		"P",
+	},
+	
+	INPUT_MODE_TOGGLE = {
+		"Insert",
+	},
+	
+	VIEW_MODE_TOGGLE = {
+		"Return",
+	},
+
 	NOTE_PREV = {
 		"Up",
 	},
@@ -99,12 +117,4 @@ return {
 		".",
 	},
 	
-	INPUT_MODE_TOGGLE = {
-		"Insert",
-	},
-	
-	VIEW_MODE_TOGGLE = {
-		"Return",
-	},
-
 }

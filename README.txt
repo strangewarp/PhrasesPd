@@ -5,7 +5,7 @@ MOST FEATURES ARE BUGGY, MINIMALLY/UNTESTED, OR MISSING
 
 IF YOU TRY USING THIS FOR ANYTHING RIGHT NOW, YOU ARE BEING SILLY
 
-Do please note: Currently, only the PhrasesPd Editor is functional. Feel free to play around with it! I still have to rewrite and debug the PhrasesPd Sequencer in Lua, and write all the MIDI/OSC connectors in Pd. But since the sequencer is heavily derived from code I've already written and rewritten several times in another language, it ought to go moderately quickly.
+Do please note: Currently, only the PhrasesPd Editor is functional. Feel free to play around with it! I still have to rewrite and debug the PhrasesPd Sequencer in Lua. But since the sequencer is heavily derived from code I've already written and rewritten several times in another language, it ought to go moderately quickly.
 
 
 
@@ -61,6 +61,8 @@ Next phrase - Right arrow
 
 Increase spacing - PageDown
 Decrease spacing - PageUp
+
+Toggle between MIDI-Catch modes - Shift-O and Shift-P
 
 MIDI channel +1 - '
 MIDI channel -1 - ;
