@@ -4,7 +4,7 @@ Editor object, designed for the particular requirements of PhrasesPd.
 
 --]]
 
-local Editor = pd.Class:new():register("phrases-editor")
+local Phrases = pd.Class:new():register("phrases-editor-and-sequencer")
 
 
 
@@ -60,8 +60,113 @@ end
 
 
 
+-- Calculate a random transference direction, from a hash of weighted directions (1-9; 10 is ignored)
+local function calcTransference(trhash)
+
+	local total, count, num = 0, 0, 0
+	
+	for k, v in pairs(trhash) do
+		if k <= 9 then
+			total = total + v
+		end
+	end
+	
+	local sel = math.random(total)
+	while (count < sel) and (num < 9) do
+		num = num + 1
+		if not(trhash[num] == nil) then
+			count = count + trhash[num]
+		end
+	end
+	
+	return num
+	
+end
+
+
+
+function Phrases:midiParse(k, midinote)
+
+	local b1, b2, b3 = midinote[1], midinote[2], midinote[3]
+	local chan = b1 % 16
+	local command = b1 - chan
+	
+	if command == 128 then -- All note-offs
+	
+		-- Only send a note-off if this is the only sustain for a note; else reduce the note's sustain counter
+		if self.midi[chan][b2] <= 1 then
+			self.midi[chan][b2] = 0
+			self:outlet(1, "list", midinote)
+		elseif self.midi[chan][b2] >= 2 then
+			self.midi[chan][b2] = self.midi[chan][b2] - 1
+		end
+		
+		self.phrase[k].sustain = -1
+	
+	elseif command == 144 then -- All note-ons
+	
+		-- If the note isn't the same as the sustain var, increment its note-tracking variable
+		if not(self.phrase[k].sustain == b2) then
+			self.midi[chan][b2] = self.midi[chan][b2] + 1
+		end
+			
+		-- If another note is currently sustained, fully parse a note-off for it before sending the next note-on
+		if not(self.phrase[k].sustain == -1) then
+			self:midiParse(k, {128 + chan, b2, 127})
+		end
+		
+		self.phrase[k].sustain = b2
+		self:outlet(1, "list", midinote)
+		
+		-- Send a blink command for the given phrase's button
+		self:outlet(4, "float", {k})
+		
+	elseif (command >= 160) and (command <= 240) then -- All other commands
+		self:outlet(1, "list", midinote)
+	end
+
+end
+
+-- Called to iterate through the notes in various phrases
+function Phrases:iterate(k)
+	
+	local p = self.phrase[k].pointer
+	local notes = self.phrase[k].notes
+	
+	-- Iterate through notes until hitting a note-on, note-off, or silent beat
+	repeat
+	
+		local oldp = p
+		
+		if notes[p] == -1 then
+			p = p + 1
+		else
+			-- Send MIDI command
+			self:midiParse(k, {notes[p], notes[p + 1], notes[p + 2]})
+			p = p + 3
+		end
+	
+		-- If the pointer has passed the end of the phrase, add a transference command to the tick's tr-queue
+		if p > #notes then
+			p = p % #notes
+			table.insert(self.tr, k)
+			table.insert(self.tr, self.phrase[k].tdir)
+		end
+		
+	until rangeCheck(notes[oldp], 128, 159)
+	
+	-- Update GUI
+	local color = math.max(0, 255 - (#notes - oldp))
+	pd.send("phrases-button-colorize", "list", {k, math.abs(color - 255), 0, color})
+	
+	self.phrase[k].pointer = p
+	
+end
+
+
+
 -- Update an internal color value and its variants
-function Editor:updateColor(ckey, color)
+function Phrases:updateColor(ckey, color)
 
 	-- This function expects colors in bursts of 3 (regular, light, dark), so it treats incoming values along those lines
 	if #self.color[ckey] < 3 then
@@ -69,13 +174,13 @@ function Editor:updateColor(ckey, color)
 	else
 		self.color[ckey] = {color}
 	end
-	
+
 end
 
 
 
 -- Update the color and contents of a cell in the editor panel
-function Editor:updateNoteButton(cellx, celly, k, p) -- editor x pointer, editor y pointer, phrase key, note pointer
+function Phrases:updateNoteButton(cellx, celly, k, p) -- editor x pointer, editor y pointer, phrase key, note pointer
 
 	local cout = -1 -- Color-out value
 	local mcout = -1 -- Message-color-out value
@@ -210,7 +315,7 @@ function Editor:updateNoteButton(cellx, celly, k, p) -- editor x pointer, editor
 end
 
 -- Update the toggle-tracking button
-function Editor:updateToggleButton()
+function Phrases:updateToggleButton()
 
 	if self.recording == true then
 		pd.send("phrases-editor-toggle-button", "color", {self.color[1][1], self.color[4][1]})
@@ -223,7 +328,7 @@ function Editor:updateToggleButton()
 end
 
 -- Update the phrase-key button
-function Editor:updateKeyButton()
+function Phrases:updateKeyButton()
 
 	pd.send("phrases-editor-key-button", "color", {self.color[2][2], self.color[4][2]})
 	pd.send("phrases-editor-key-button", "label", {"Phrase " .. self.key})
@@ -231,7 +336,7 @@ function Editor:updateKeyButton()
 end
 
 -- Update the note-item button
-function Editor:updateItemButton()
+function Phrases:updateItemButton()
 
 	pd.send("phrases-editor-item-button", "color", {self.color[2][2], self.color[4][2]})
 	pd.send("phrases-editor-item-button", "label", {"Item " .. self.pointer})
@@ -239,7 +344,7 @@ function Editor:updateItemButton()
 end
 
 -- Update the tick-counter button
-function Editor:updateTickButton()
+function Phrases:updateTickButton()
 
 	local tcount = 0
 	local nbyte = 0
@@ -262,7 +367,7 @@ function Editor:updateTickButton()
 end
 
 -- Update the data-entry-mode button
-function Editor:updateModeButton()
+function Phrases:updateModeButton()
 
 	if self.inputmode == "note" then
 		pd.send("phrases-editor-mode-button", "color", {self.color[2][1], self.color[4][1]})
@@ -275,7 +380,7 @@ function Editor:updateModeButton()
 end
 
 -- Update the MIDI-catch-style button
-function Editor:updateMIDICatchButton()
+function Phrases:updateMIDICatchButton()
 
 	if self.midicatch == "all" then
 		pd.send("phrases-editor-midicatch-button", "color", {self.color[2][2], self.color[4][2]})
@@ -294,7 +399,7 @@ function Editor:updateMIDICatchButton()
 end
 
 -- Update the MIDI-channel button
-function Editor:updateChannelButton()
+function Phrases:updateChannelButton()
 
 	local chbcolor = -1
 	local chbmessage = ""
@@ -313,7 +418,7 @@ function Editor:updateChannelButton()
 end
 
 -- Update the MIDI-command button
-function Editor:updateCommandButton()
+function Phrases:updateCommandButton()
 
 	local cmdkey = 1
 	for k, v in pairs(cmdtable) do
@@ -335,7 +440,7 @@ function Editor:updateCommandButton()
 end
 
 -- Update the MIDI-velocity button
-function Editor:updateVelocityButton()
+function Phrases:updateVelocityButton()
 
 	pd.send("phrases-editor-velocity-button", "color", {self.color[2][1], self.color[4][1]})
 	pd.send("phrases-editor-velocity-button", "label", {"Velo " .. self.velocity})
@@ -343,7 +448,7 @@ function Editor:updateVelocityButton()
 end
 
 -- Update the input octave button
-function Editor:updateOctaveButton()
+function Phrases:updateOctaveButton()
 
 	pd.send("phrases-editor-octave-button", "color", {self.color[2][1], self.color[4][1]})
 	pd.send("phrases-editor-octave-button", "label", {"Octave " .. self.octave})
@@ -351,7 +456,7 @@ function Editor:updateOctaveButton()
 end
 
 -- Update the input spacing button
-function Editor:updateSpacingButton()
+function Phrases:updateSpacingButton()
 
 	pd.send("phrases-editor-spacing-button", "color", {self.color[2][1], self.color[4][1]})
 	pd.send("phrases-editor-spacing-button", "label", {"Spacing " .. self.spacing})
@@ -359,7 +464,7 @@ function Editor:updateSpacingButton()
 end
 
 -- Update the global BPM button
-function Editor:updateGlobalBPMButton()
+function Phrases:updateGlobalBPMButton()
 
 	pd.send("phrases-editor-global-bpm-button", "color", {self.color[2][1], self.color[4][1]})
 	pd.send("phrases-editor-global-bpm-button", "label", {"BPM " .. self.bpm})
@@ -367,7 +472,7 @@ function Editor:updateGlobalBPMButton()
 end
 
 -- Update the global TPB button
-function Editor:updateGlobalTPBButton()
+function Phrases:updateGlobalTPBButton()
 
 	pd.send("phrases-editor-global-tpb-button", "color", {self.color[2][1], self.color[4][1]})
 	pd.send("phrases-editor-global-tpb-button", "label", {"TPB " .. self.tpb})
@@ -375,7 +480,7 @@ function Editor:updateGlobalTPBButton()
 end
 
 -- Update the global GATE button
-function Editor:updateGlobalGateButton()
+function Phrases:updateGlobalGateButton()
 
 	pd.send("phrases-editor-global-gate-button", "color", {self.color[2][1], self.color[4][1]})
 	pd.send("phrases-editor-global-gate-button", "label", {"Gate " .. self.gate})
@@ -383,14 +488,14 @@ function Editor:updateGlobalGateButton()
 end
 
 -- Update the editor's background color
-function Editor:updateBackground()
+function Phrases:updateBackground()
 
 	pd.send("phrases-editor-bg", "color", {self.color[3][1]})
 
 end
 
 -- Update all cells and buttons in the editor GUI
-function Editor:updateEditorGUI()
+function Phrases:updateEditorGUI()
 
 	self:updateToggleButton()
 	self:updateKeyButton()
@@ -420,7 +525,7 @@ end
 
 
 
-function Editor:initialize(sel, atoms)
+function Phrases:initialize(sel, atoms)
 
 	-- 1. Key commands
 	-- 2. MIDI-IN
@@ -462,6 +567,9 @@ function Editor:initialize(sel, atoms)
 	self.tpb = 4
 	self.gate = 16
 	
+	-- Track which tempo tick is currently active
+	self.tick = 1
+	
 	-- Default GUI colors: {regular, highlight, dark}
 	self.color = {
 		{-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
@@ -477,6 +585,19 @@ function Editor:initialize(sel, atoms)
 			active = false,
 		}
 	end
+	
+	-- Create an array for tracking global MIDI sustain values
+	self.midi = {}
+	for i = 0, 15 do
+		self.midi[i] = {}
+		for j = 0, 127 do
+			self.midi[i][j] = 0
+		end
+	end
+	
+	self.tr = {} -- Table for tracking all transference that occurs on a given tick
+	
+	self.queue = {} -- Table for holding all incoming button presses; it is emptied out on every gate-tick
 	
 	self.key = 1 -- Currently active phrase
 	
@@ -503,7 +624,7 @@ end
 
 
 -- Control-commands in
-function Editor:in_1_list(list)
+function Phrases:in_1_list(list)
 
 	local cmd = list[1]
 	
@@ -989,7 +1110,7 @@ end
 
 
 -- Receive MIDI notes from a MIDI device
-function Editor:in_2_list(note)
+function Phrases:in_2_list(note)
 
 	if self.recording == true then -- If recording-mode is toggled on...
 	
@@ -1052,7 +1173,7 @@ function Editor:in_2_list(note)
 end
 
 -- Interpret an incoming Monome button command, and switch to the relevant phrase
-function Editor:in_3_list(k)
+function Phrases:in_3_list(k)
 
 	local button = k[1] + (k[2] * self.gridx) + 1
 
@@ -1073,14 +1194,14 @@ function Editor:in_3_list(k)
 end
 
 -- Get loadfile name
-function Editor:in_4_list(s)
+function Phrases:in_4_list(s)
 	-- table.concat() is necessary, because Pd will interpret paths that contain spaces as lists
 	self.loadname = table.concat(s, " ")
 	pd.post("Current loadfile name is now: " .. self.loadname)
 end
 
 -- Get savefile name
-function Editor:in_5_list(s)
+function Phrases:in_5_list(s)
 	-- table.concat() is necessary, because Pd will interpret paths that contain spaces as lists
 	self.savename = table.concat(s, " ")
 	pd.post("Current savefile name (including path) is now: " .. self.filepath .. self.savename)
@@ -1088,71 +1209,63 @@ function Editor:in_5_list(s)
 end
 
 -- Get savefile path
-function Editor:in_6_list(s)
+function Phrases:in_6_list(s)
 	-- table.concat() is necessary, because Pd will interpret paths that contain spaces as lists
 	self.filepath = table.concat(s, " ")
 	pd.post("Current savefile path is now: " .. self.filepath)
 end
 
 -- Get global BPM value
-function Editor:in_7_float(f)
+function Phrases:in_7_float(f)
 	self.bpm = f
 end
 
 -- Get global TPB value
-function Editor:in_8_float(f)
+function Phrases:in_8_float(f)
 	self.tpb = f
 end
 
 -- Get global GATE value
-function Editor:in_9_float(f)
+function Phrases:in_9_float(f)
 	self.gate = f
 end
 
 -- Get global grid-width
-function Editor:in_10_float(x)
+function Phrases:in_10_float(x)
 	self.gridx = x
 end
 
 -- Get global grid-height
-function Editor:in_11_float(y)
+function Phrases:in_11_float(y)
 	self.gridy = y
 end
 
 -- Get global editor-width
-function Editor:in_12_float(x)
+function Phrases:in_12_float(x)
 	self.editorx = x
 end
 
 -- Get global editor-height
-function Editor:in_13_float(y)
+function Phrases:in_13_float(y)
 	self.editory = y
 end
 
 -- Get GUI color-values
-function Editor:in_14_color(c)
-
+function Phrases:in_14_color(c)
 	self:updateColor(1, c[1])
-	
 end
 
 -- Get GUI color-value
-function Editor:in_15_color(c)
-
+function Phrases:in_15_color(c)
 	self:updateColor(2, c[1])
-	
 end
 
 -- Get GUI color-value
-function Editor:in_16_color(c)
-
+function Phrases:in_16_color(c)
 	self:updateColor(3, c[1])
-	
 end
 
 -- Get GUI color-value
-function Editor:in_17_color(c)
-
+function Phrases:in_17_color(c)
 	self:updateColor(4, c[1])
-	
 end
