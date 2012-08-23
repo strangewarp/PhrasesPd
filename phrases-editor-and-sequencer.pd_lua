@@ -530,24 +530,28 @@ function Phrases:initialize(sel, atoms)
 	-- 1. Key commands
 	-- 2. MIDI-IN
 	-- 3. Monome button
-	-- 4. loadfile name
-	-- 5. savefile name
-	-- 6. savepath name
-	-- 7. Global BPM
-	-- 8. Global TPB
-	-- 9. Global GATE
-	-- 10. Grid X cells
-	-- 11. Grid Y cells
-	-- 12. Editor X cells
-	-- 13. Editor Y cells
-	-- 14. Editor GUI color 1
-	-- 15. Editor GUI color 2
-	-- 16. Editor GUI color 3
-	-- 17. Editor GUI color 4
-	self.inlets = 17
+	-- 4. Tempo ticks
+	-- 5. Loadfile name
+	-- 6. Savefile name
+	-- 7. Savepath name
+	-- 8. Global BPM
+	-- 9. Global TPB
+	-- 10. Global GATE
+	-- 11. Grid X cells
+	-- 12. Grid Y cells
+	-- 13. Editor X cells
+	-- 14. Editor Y cells
+	-- 15. Editor GUI color 1
+	-- 16. Editor GUI color 2
+	-- 17. Editor GUI color 3
+	-- 18. Editor GUI color 4
+	self.inlets = 18
 	
-	-- 1. Note-send out (to delayed note-off as well)
-	self.outlets = 1
+	-- 1. Editor note-send out (to delayed note-off as well)
+	-- 2. Sequencer note-send out
+	-- 3. Monome LED-command out
+	-- 4. Blink out
+	self.outlets = 4
 	
 	-- Default grid height and width
 	self.gridx = 8
@@ -695,7 +699,7 @@ function Phrases:in_1_list(list)
 			self:outlet(1, "list", {144 + self.channel, putnote, self.velocity})
 		end
 		
-	elseif cmd == "RECORD_TOGGLE" then -- Toggle recording mode ON or OFF
+	elseif cmd == "RECORD" then -- Toggle recording mode ON or OFF
 	
 		self.recording = not(self.recording)
 		pd.post("Recording toggled to " .. tostring(self.recording))
@@ -1193,15 +1197,23 @@ function Phrases:in_3_list(k)
 	
 end
 
+
+-- Get tempo ticks
+function Phrases:in_4_bang(tick)
+
+	
+
+end
+
 -- Get loadfile name
-function Phrases:in_4_list(s)
+function Phrases:in_5_list(s)
 	-- table.concat() is necessary, because Pd will interpret paths that contain spaces as lists
 	self.loadname = table.concat(s, " ")
 	pd.post("Current loadfile name is now: " .. self.loadname)
 end
 
 -- Get savefile name
-function Phrases:in_5_list(s)
+function Phrases:in_6_list(s)
 	-- table.concat() is necessary, because Pd will interpret paths that contain spaces as lists
 	self.savename = table.concat(s, " ")
 	pd.post("Current savefile name (including path) is now: " .. self.filepath .. self.savename)
@@ -1209,63 +1221,63 @@ function Phrases:in_5_list(s)
 end
 
 -- Get savefile path
-function Phrases:in_6_list(s)
+function Phrases:in_7_list(s)
 	-- table.concat() is necessary, because Pd will interpret paths that contain spaces as lists
 	self.filepath = table.concat(s, " ")
 	pd.post("Current savefile path is now: " .. self.filepath)
 end
 
 -- Get global BPM value
-function Phrases:in_7_float(f)
+function Phrases:in_8_float(f)
 	self.bpm = f
 end
 
 -- Get global TPB value
-function Phrases:in_8_float(f)
+function Phrases:in_9_float(f)
 	self.tpb = f
 end
 
 -- Get global GATE value
-function Phrases:in_9_float(f)
+function Phrases:in_10_float(f)
 	self.gate = f
 end
 
 -- Get global grid-width
-function Phrases:in_10_float(x)
+function Phrases:in_11_float(x)
 	self.gridx = x
 end
 
 -- Get global grid-height
-function Phrases:in_11_float(y)
+function Phrases:in_12_float(y)
 	self.gridy = y
 end
 
 -- Get global editor-width
-function Phrases:in_12_float(x)
+function Phrases:in_13_float(x)
 	self.editorx = x
 end
 
 -- Get global editor-height
-function Phrases:in_13_float(y)
+function Phrases:in_14_float(y)
 	self.editory = y
 end
 
 -- Get GUI color-values
-function Phrases:in_14_color(c)
+function Phrases:in_15_color(c)
 	self:updateColor(1, c[1])
 end
 
 -- Get GUI color-value
-function Phrases:in_15_color(c)
+function Phrases:in_16_color(c)
 	self:updateColor(2, c[1])
 end
 
 -- Get GUI color-value
-function Phrases:in_16_color(c)
+function Phrases:in_17_color(c)
 	self:updateColor(3, c[1])
 end
 
 -- Get GUI color-value
-function Phrases:in_17_color(c)
+function Phrases:in_18_color(c)
 	self:updateColor(4, c[1])
 end

@@ -13,7 +13,7 @@ return {
 		"|",
 	},
 	
-	RECORD_TOGGLE = {
+	RECORD = {
 		"Escape",
 	},
 	
