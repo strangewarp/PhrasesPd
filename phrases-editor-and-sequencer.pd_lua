@@ -60,6 +60,7 @@ end
 
 
 
+-- REWRITE THIS
 -- Calculate a random transference direction, from a hash of weighted directions (1-9; 10 is ignored)
 local function calcTransference(trhash)
 
@@ -84,7 +85,7 @@ local function calcTransference(trhash)
 end
 
 
-
+-- REWRITE THIS
 function Phrases:midiParse(k, midinote)
 
 	local b1, b2, b3 = midinote[1], midinote[2], midinote[3]
@@ -95,10 +96,14 @@ function Phrases:midiParse(k, midinote)
 	
 		-- Only send a note-off if this is the only sustain for a note; else reduce the note's sustain counter
 		if self.midi[chan][b2] <= 1 then
+		
 			self.midi[chan][b2] = 0
-			self:outlet(1, "list", midinote)
+			self:outlet(2, "list", midinote)
+			
 		elseif self.midi[chan][b2] >= 2 then
+		
 			self.midi[chan][b2] = self.midi[chan][b2] - 1
+			
 		end
 		
 		self.phrase[k].sustain = -1
@@ -116,13 +121,15 @@ function Phrases:midiParse(k, midinote)
 		end
 		
 		self.phrase[k].sustain = b2
-		self:outlet(1, "list", midinote)
+		self:outlet(2, "list", midinote)
 		
 		-- Send a blink command for the given phrase's button
 		self:outlet(4, "float", {k})
 		
-	elseif (command >= 160) and (command <= 240) then -- All other commands
-		self:outlet(1, "list", midinote)
+	elseif rangeCheck(command, 160, 255)
+	or rangeCheck(command, -5, -7)
+	then -- All other commands
+		self:outlet(2, "list", midinote)
 	end
 
 end
@@ -155,9 +162,8 @@ function Phrases:iterate(k)
 		
 	until rangeCheck(notes[oldp], 128, 159)
 	
-	-- Update GUI
-	local color = math.max(0, 255 - (#notes - oldp))
-	pd.send("phrases-button-colorize", "list", {k, math.abs(color - 255), 0, color})
+	-- Send a blink command for the relevant button
+	self:outlet(4, "list", {(k - 1) / self.gridx, math.floor(k / self.gridy)})
 	
 	self.phrase[k].pointer = p
 	
@@ -525,6 +531,21 @@ end
 
 
 
+-- Set the default values for a given phrase
+function Phrases:setDefaults(p)
+
+	self.phrase[p] = {
+		transfer = { 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, },
+		tdir = 5,
+		notes = { {-1}, {-1}, {-1}, {-1}, },
+		pointer = 1,
+		active = false,
+	}
+
+end
+
+
+
 function Phrases:initialize(sel, atoms)
 
 	-- 1. Key commands
@@ -545,7 +566,11 @@ function Phrases:initialize(sel, atoms)
 	-- 16. Editor GUI color 2
 	-- 17. Editor GUI color 3
 	-- 18. Editor GUI color 4
-	self.inlets = 18
+	-- 19. Grid GUI color 1
+	-- 20. Grid GUI color 2
+	-- 21. Grid GUI color 3
+	-- 22. Grid GUI color 4
+	self.inlets = 22
 	
 	-- 1. Editor note-send out (to delayed note-off as well)
 	-- 2. Sequencer note-send out
@@ -576,18 +601,13 @@ function Phrases:initialize(sel, atoms)
 	
 	-- Default GUI colors: {regular, highlight, dark}
 	self.color = {
-		{-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
+		{-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
+		{-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1},
 	}
 	
 	self.phrase = {}
 	for i = 1, self.gridx * self.gridy do -- Set default phrase data
-		self.phrase[i] = {
-			transfer = { 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, },
-			tdir = 5,
-			notes = { {-1}, {-1}, {-1}, {-1}, },
-			pointer = 1,
-			active = false,
-		}
+		self:setDefaults(i)
 	end
 	
 	-- Create an array for tracking global MIDI sustain values
@@ -615,11 +635,11 @@ function Phrases:initialize(sel, atoms)
 	
 	self.recording = false -- Toggle whether to record data from incoming keystrokes
 	
+	self.pitchview = true -- Flag that controls whether editor data values are shown as pitches or numbers
+	
 	self.inputmode = "note" -- Set to either 'note' or 'tr', depending on which input mode is active
 	
 	self.midicatch = "all" -- Changes to "all", "notes", "no-offs", or "ignore", to set which sort of MIDI input is accepted
-	
-	self.pitchview = true -- Flag that controls whether editor data values are shown as pitches or numbers
 	
 	return true
 	
@@ -1199,8 +1219,25 @@ end
 
 
 -- Get tempo ticks
-function Phrases:in_4_bang(tick)
+function Phrases:in_4_bang()
 
+	self.tick = self.tick + 1
+	
+	-- Check for whether the tick has advanced past the gate. If so, reset the tick, and trigger all gate-only events.
+	if self.tick > self.gate then
+	
+		self.tick = 1
+		
+		for k, v in pairs(self.queue) do
+			
+			self.phrase[v].active = not(self.phrase[v].active)
+			
+		end
+		
+		
+		
+	end
+	
 	
 
 end
@@ -1281,3 +1318,24 @@ end
 function Phrases:in_18_color(c)
 	self:updateColor(4, c[1])
 end
+
+-- Get GUI color-value
+function Phrases:in_19_color(c)
+	self:updateColor(5, c[1])
+end
+
+-- Get GUI color-value
+function Phrases:in_20_color(c)
+	self:updateColor(6, c[1])
+end
+
+-- Get GUI color-value
+function Phrases:in_21_color(c)
+	self:updateColor(7, c[1])
+end
+
+-- Get GUI color-value
+function Phrases:in_22_color(c)
+	self:updateColor(8, c[1])
+end
+
