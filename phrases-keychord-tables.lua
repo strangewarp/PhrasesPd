@@ -3,7 +3,7 @@ return {
 
 	LOAD = {
 		"Shift",
-		"Escape",
+		"BackSpace",
 		"Return",
 	},
 	
