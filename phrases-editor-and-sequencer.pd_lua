@@ -659,6 +659,22 @@ function Phrases:updateGlobalGateButton()
 
 end
 
+-- Update the savefile hotseat buttons
+function Phrases:updateHotseatButtons()
+
+	local outcolor = nil
+	for k, v in pairs(self.hotseats) do
+		if v == self.loadname then
+			outcolor = self.color[1][1]
+		else
+			outcolor = self.color[2][1]
+		end
+		self:outlet(5, "list", rgbOutList("phrases-editor-hotseat-button-" .. k, outcolor, self.color[4][1]))
+		pd.send("phrases-editor-hotseat-button-" .. k, "label", {k .. string.rep(".", 3 - string.len(k)) .. " " .. v})
+	end
+
+end
+
 -- Update the editor's background color
 function Phrases:updateBackground()
 
@@ -684,6 +700,8 @@ function Phrases:updateEditorGUI()
 	self:updateGlobalBPMButton()
 	self:updateGlobalTPBButton()
 	self:updateGlobalGateButton()
+	
+	self:updateHotseatButtons()
 	
 	for ey = 1, self.editory do
 		for ex = 1, self.editorx do
@@ -773,8 +791,14 @@ function Phrases:initialize(sel, atoms)
 	self.editorx = 6
 	self.editory = 32
 	
+	-- Load user-defined default hotseats
+	self.hotseats = self:dofile("phrases-hotseats.lua")
+	for k, v in pairs(self.hotseats) do
+		pd.post("Default hotseat " .. k .. ": " .. v)
+	end
+	
 	-- Default file names and paths
-	self.loadname = "default-savefile.lua"
+	self.loadname = self.hotseats[1]
 	self.savename = "default-savefile.lua"
 	self.filepath = ""
 	
@@ -914,6 +938,15 @@ function Phrases:in_1_list(list)
 	
 		self:updateEditorGUI()
 		
+	elseif cmd:sub(1, 12) == "LOAD_HOTSEAT" then -- Savefile hotseat commands
+	
+		local hsnum = tonumber(cmd:sub(14))
+		
+		self.loadname = self.hotseats[hsnum]
+		pd.post("Current loadfile name is now: " .. self.loadname)
+		
+		self:updateHotseatButtons()
+	
 	elseif cmd == "LOAD" then -- Load a Lua savename into local variables
 	
 		-- Check all current phrases for activity, and change the flag appropriately

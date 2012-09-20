@@ -1,6 +1,116 @@
 
 return {
 
+	LOAD_HOTSEAT_1 = {
+		"Shift",
+		"!",
+	},
+	
+	LOAD_HOTSEAT_2 = {
+		"Shift",
+		"@",
+	},
+	
+	LOAD_HOTSEAT_3 = {
+		"Shift",
+		"#",
+	},
+	
+	LOAD_HOTSEAT_4 = {
+		"Shift",
+		"$",
+	},
+	
+	LOAD_HOTSEAT_5 = {
+		"Shift",
+		"%",
+	},
+	
+	LOAD_HOTSEAT_6 = {
+		"Shift",
+		"^",
+	},
+	
+	LOAD_HOTSEAT_7 = {
+		"Shift",
+		"&",
+	},
+	
+	LOAD_HOTSEAT_8 = {
+		"Shift",
+		"*",
+	},
+	
+	LOAD_HOTSEAT_9 = {
+		"Shift",
+		"(",
+	},
+	
+	LOAD_HOTSEAT_10 = {
+		"Shift",
+		")",
+	},
+	
+	LOAD_HOTSEAT_11 = {
+		"Shift",
+		"BackSpace",
+		"!",
+	},
+	
+	LOAD_HOTSEAT_12 = {
+		"Shift",
+		"BackSpace",
+		"@",
+	},
+	
+	LOAD_HOTSEAT_13 = {
+		"Shift",
+		"BackSpace",
+		"#",
+	},
+	
+	LOAD_HOTSEAT_14 = {
+		"Shift",
+		"BackSpace",
+		"$",
+	},
+	
+	LOAD_HOTSEAT_15 = {
+		"Shift",
+		"BackSpace",
+		"%",
+	},
+	
+	LOAD_HOTSEAT_16 = {
+		"Shift",
+		"BackSpace",
+		"^",
+	},
+	
+	LOAD_HOTSEAT_17 = {
+		"Shift",
+		"BackSpace",
+		"&",
+	},
+	
+	LOAD_HOTSEAT_18 = {
+		"Shift",
+		"BackSpace",
+		"*",
+	},
+	
+	LOAD_HOTSEAT_19 = {
+		"Shift",
+		"BackSpace",
+		"(",
+	},
+	
+	LOAD_HOTSEAT_20 = {
+		"Shift",
+		"BackSpace",
+		")",
+	},
+	
 	LOAD = {
 		"Shift",
 		"BackSpace",

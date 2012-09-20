@@ -1,6 +1,6 @@
 #N canvas 57 0 353 554 10;
 #X declare -lib mrpeach;
-#N canvas 195 33 819 464 phrases-editor-gui 1;
+#N canvas 57 33 957 464 phrases-editor-gui 1;
 #X restore 12 1049 pd phrases-editor-gui;
 #N canvas 428 123 519 420 phrases-gui-sender 1;
 #X msg 87 322 vis 1 \, clear;
@@ -549,7 +549,7 @@ updates of activity on / \; tick 0 \, and transference whenever.;
 #X connect 73 1 37 0;
 #X connect 73 2 38 1;
 #X restore 12 1087 pd phrases-button-colorizer;
-#N canvas 316 0 403 552 phrases-keystroke-parser 0;
+#N canvas 316 0 403 556 phrases-keystroke-parser 0;
 #X obj 69 28 keyname;
 #X floatatom 69 54 5 0 0 0 - - -;
 #X symbolatom 108 54 10 0 0 0 - - -;

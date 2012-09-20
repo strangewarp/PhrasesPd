@@ -12,6 +12,7 @@ local GUIGenerator = pd.Class:new():register("phrases-gui-generator")
 local tab = require("phrases-gui-tables")
 local gsnames = tab.gsnames
 local esnames = tab.esnames
+local hseatnames = tab.hseatnames
 
 
 
@@ -204,7 +205,7 @@ function GUIGenerator:in_1_bang()
 		1,
 		0,
 		0,
-		((self.editorcwidth + self.editormx) * self.editorcx) + (self.editorcwidth * 1.5) + (self.editormx * 2),
+		((self.editorcwidth + self.editormx) * (self.editorcx + 1)) + (self.editorcwidth * 1.5) + (self.editormx * 2),
 		((self.editorcheight + self.editormy) * self.editorcy) + self.editormy,
 		1,
 		1,
@@ -242,13 +243,29 @@ function GUIGenerator:in_1_bang()
 		1,
 		((self.editorcwidth + self.editormx) * self.editorcx) + self.editormx,
 		self.editormy,
-		self.editorcwidth * 1.5,
-		self.editorcheight * 2,
+		self.editorcwidth,
+		self.editorcheight,
 		self.editormx,
 		self.editormy,
 		math.floor(self.editorcwidth / 50),
-		8,
-		math.floor(self.editorcheight * 1.5)
+		6,
+		self.editorcheight
+	)
+	
+	-- Generate editor-window hotseat-panel
+	buildGrid(
+		hseatnames,
+		"phrases-editor-gui-object",
+		1,
+		((self.editorcwidth + self.editormx) * (self.editorcx + 1)) + self.editormx,
+		self.editormy,
+		self.editorcwidth * 1.5,
+		self.editorcheight,
+		self.editormx,
+		self.editormy,
+		math.floor(self.editorcwidth / 50),
+		6,
+		self.editorcheight
 	)
 
 end
