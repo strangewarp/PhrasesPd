@@ -713,6 +713,19 @@ function Phrases:updateEditorGUI()
 
 end
 
+-- Setup the color values in the grid GUI that would otherwise not be set by other code
+function Phrases:setupGridGUI()
+
+	for x = 0, self.gridx - 1 do
+		for y = 0, self.gridy - 1 do
+			self:outlet(5, "list", rgbOutList(y .. "-" .. x .. "-grid-button", self.color[8][1], self.color[8][1]))
+		end
+	end
+	
+	self:outlet(5, "list", rgbOutList("phrases-grid-bg", self.color[8][2], self.color[8][2]))
+
+end
+
 
 
 function Phrases:setDefaultNotes(p)
@@ -846,7 +859,7 @@ function Phrases:initialize(sel, atoms)
 	
 	self.inputmode = "note" -- Set to either 'note' or 'tr', depending on which input mode is active
 	
-	self.midicatch = "all" -- Changes to "all", "notes", "no-offs", or "ignore", to set which sort of MIDI input is accepted
+	self.midicatch = "all" -- Changes which sort of MIDI input is accepted
 	
 	return true
 	
@@ -1379,6 +1392,14 @@ function Phrases:in_1_list(list)
 		end
 		
 		self:updateEditorGUI()
+	
+	elseif cmd == "UPDATE_EDITOR_GUI" then -- Trigger an update in the editor GUI window
+	
+		self:updateEditorGUI()
+	
+	elseif cmd == "SETUP_GRID_GUI" then -- Setup colors in the grid GUI window that would otherwise go unset
+	
+		self:setupGridGUI()
 	
 	end
 
