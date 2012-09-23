@@ -18,7 +18,7 @@ TO-DO LIST (in rough order of desired implementation):
 * Add feature: MIDI-CLOCK capabilities.
 * Refactoring: Shunt as many functions as possible into Lua table files, and require said files into the relevant pdlua objects.
 * Refactoring: Replace laggy loops with pre-generated tables wherever possible.
-* Design change: Combine the Editor and Grid into one GUI window, and have Lua control the Pd "level" canvas property to tab between their graphical elements.
+* --- Beta Release Goes Here ---
 
 
 
