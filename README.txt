@@ -1,13 +1,11 @@
 
 WARNING PRE-ALPHA
 
-MOST FEATURES ARE BUGGY, MINIMALLY/UNTESTED, OR MISSING
+MOST FEATURES ARE MINIMALLY TESTED OR BUGGY
 
-IF YOU TRY USING THIS FOR ANYTHING RIGHT NOW, YOU ARE BEING SILLY
+TRANSFERENCE AND MIDI SUSTAINS CURRENTLY DO NOT FUNCTION PROPERLY
 
-IF YOU TRY USING THE SEQUENCER, IT /WILL/ BREAK IMMEDIATELY
-
-Please note: Currently, only the PhrasesPd Editor is functional. Feel free to play around with it! I still have to debug the PhrasesPd Sequencer. It's based on code I've written before in another language, so it probably won't take too long.
+Feel free to play around with the PhrasesPd editor and sequencer. I am still debugging transference and sustains, so if you try to use either of those, you may end up in uncharted territory.
 
 
 

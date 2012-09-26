@@ -320,7 +320,13 @@ function Phrases:iterate(k)
 			-- Insert a transference command into the tick's transference table
 			self.trqueue[k] = self.phrase[k].tdir
 			
-			-- Calculate a new transference value
+			-- Halt activity on all self-terminating phrases
+			if self.phrase[k].transfer[10] == 0 then
+				self.phrase[k].active = false
+				self:haltPhraseMidi(k)
+			end
+			
+			-- Calculate a new transference value for the phrase's next cycle
 			self.phrase[k].tdir = calcTransference(self.phrase[k].transfer)
 			
 		end
@@ -1517,9 +1523,9 @@ function Phrases:in_4_bang()
 	-- Update the gate-button's color, based on the current tick
 	local rgbgate = {}
 	for i = 1, 3 do
-	rgbgate[i] = math.max(1, math.min(255, math.floor(math.abs(
-		self.color[5][1][i] + ((self.color[6][1][i] - self.color[5][1][i]) * (self.tick / self.gate))
-	))))
+		rgbgate[i] = math.max(1, math.min(255, math.floor(math.abs(
+			self.color[5][1][i] + ((self.color[6][1][i] - self.color[5][1][i]) * (self.tick / self.gate))
+		))))
 	end
 	self:outlet(5, "list", rgbOutList("phrases-grid-gate-button", rgbgate, self.color[8][1]))
 	
@@ -1557,6 +1563,16 @@ function Phrases:in_4_bang()
 		
 		self.phrase[trnew].active = true
 		self.phrase[trnew].pointer = 1
+		local trax, tray = keyToCoords(trnew, self.gridx, self.gridy, 1, 0)
+		self:outlet(3, "list", {trax, tray, 1})
+		self:outlet(5, "list", rgbOutList(tray .. "-" .. trax .. "-grid-button", self.color[8][1], self.color[8][1]))
+		
+		-- Clean up the GUI of the phrase whose activity caused the transference in the first place
+		if k ~= trnew then
+			local txold, tyold = keyToCoords(k, self.gridx, self.gridy, 1, 0)
+			self:outlet(3, "list", {txold, tyold, 0})
+			self:outlet(5, "list", rgbOutList(tyold .. "-" .. txold .. "-grid-button", self.color[8][1], self.color[8][1]))
+		end
 		
 	end
 	
