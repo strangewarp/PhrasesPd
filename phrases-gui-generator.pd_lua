@@ -177,8 +177,8 @@ function GUIGenerator:in_1_bang()
 		self.gridcheight, -- Cell height
 		self.gridmx, -- Grid X-margin
 		self.gridmy, -- Grid Y-margin
-		math.floor(self.gridcwidth / 50), -- Label X-offset
-		6, -- Label Y-offset
+		math.floor(self.gridcwidth / 8), -- Label X-offset
+		math.floor(self.gridcheight / 2), -- Label Y-offset
 		self.gridcheight -- Font size
 	)
 

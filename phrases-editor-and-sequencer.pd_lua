@@ -4,7 +4,7 @@ local Phrases = pd.Class:new():register("phrases-editor-and-sequencer")
 
 
 -- Load the code's data tables in a tidy manner
-local tabs = require("phrases-editor-tables")
+local tabs = require("phrases-main-tables")
 local kbnames = tabs.kbnames
 local kbhash = tabs.kbhash(kbnames)
 local notenames = tabs.notenames
@@ -13,6 +13,7 @@ local cmdnames = tabs.cmdnames
 local trnames = tabs.trnames
 local catchtypes = tabs.catchtypes
 local modenames = tabs.modenames
+local directions = tabs.directions
 
 
 
@@ -190,6 +191,7 @@ local function rgbOutList(name, ctab, mtab)
 	return { name, ctab[1], ctab[2], ctab[3], mtab[1], mtab[2], mtab[3], }
 
 end
+
 
 
 -- Send a note that has been parsed by noteParse()
@@ -1507,9 +1509,24 @@ function Phrases:in_3_list(k)
 		and (button <= #self.phrase) -- Only if the button maps to a currently-existant phrase
 		then
 			
-			-- Record a keystroke to the global keystroke-queue, which is emptied and parsed on each gate tick
-			table.insert(self.queue, button)
-			pd.post("Queued key: " .. button)
+			if (#self.phrase[button].notes < self.gate) -- If the phrase has fewer notes than the gate value...
+			and (self.phrase[button].active == true) -- And is already active...
+			then -- Then immediately turn it off, to prevent trainwrecks of short phrases
+				-- Reset the phrase's internal variables, MIDI sustains, GUI cell, and Monome button
+				local clearname = k[2] .. "-" .. k[1] .. "-grid-button"
+				self.phrase[button].active = false
+				self:haltPhraseMidi(button)
+				self.phrase[button].pointer = 1
+				self.phrase[button].tick = 1
+				self:outlet(3, "list", {k[1], k[2], 0})
+				self:outlet(4, "list", {k[1], k[2], 0}) -- Override any blink commands that might lay a half-tick out in Pd
+				self:outlet(5, "list", rgbOutList(clearname, self.color[8][1], self.color[8][1]))
+				pd.send(clearname, "label", {""})
+			else
+				-- Record a keystroke to the global keystroke-queue, which is emptied and parsed on each gate tick
+				table.insert(self.queue, button)
+				pd.post("Queued key: " .. button)
+			end
 			
 		end
 	
@@ -1550,7 +1567,11 @@ function Phrases:in_4_bang()
 			end
 			
 			local bname = guiy .. "-" .. guix .. "-grid-button"
-			self:outlet(5, "list", rgbOutList(bname, rgbout, self.color[8][1]))
+			self:outlet(5, "list", rgbOutList(bname, rgbout, self.color[7][1]))
+			
+			--if v.tdir ~= 5 then
+			pd.send(bname, "label", {directions[v.tdir]}) -- Send the relevant transference direction symbol
+			--end
 		
 		end
 		
@@ -1563,6 +1584,9 @@ function Phrases:in_4_bang()
 		
 		self.phrase[trnew].active = true
 		self.phrase[trnew].pointer = 1
+		self.phrase[trnew].tick = 1
+		self.phrase[trnew].tdir = calcTransference(self.phrase[trnew].transfer)
+		
 		local trax, tray = keyToCoords(trnew, self.gridx, self.gridy, 1, 0)
 		self:outlet(3, "list", {trax, tray, 1})
 		self:outlet(5, "list", rgbOutList(tray .. "-" .. trax .. "-grid-button", self.color[8][1], self.color[8][1]))
@@ -1570,8 +1594,10 @@ function Phrases:in_4_bang()
 		-- Clean up the GUI of the phrase whose activity caused the transference in the first place
 		if k ~= trnew then
 			local txold, tyold = keyToCoords(k, self.gridx, self.gridy, 1, 0)
+			local oldbutton = tyold .. "-" .. txold .. "-grid-button"
 			self:outlet(3, "list", {txold, tyold, 0})
-			self:outlet(5, "list", rgbOutList(tyold .. "-" .. txold .. "-grid-button", self.color[8][1], self.color[8][1]))
+			self:outlet(5, "list", rgbOutList(oldbutton, self.color[8][1], self.color[8][1]))
+			pd.send(oldbutton, "label", {""})
 		end
 		
 	end
@@ -1590,24 +1616,20 @@ function Phrases:in_5_bang()
 	for _, v in pairs(self.queue) do
 		
 		local outx, outy = keyToCoords(v, self.gridx, self.gridy, 1, 0)
+		local outbutton = outy .. "-" .. outx .. "-grid-button"
 
 		if self.phrase[v].active == false then -- On-toggle
 		
 			self.phrase[v].active = true
 		
-			-- Since the phrase was just activated, calculate a new transference direction
+			-- Since the phrase was just activated, calculate a new transference direction, and send its label to the GUI
 			self.phrase[v].tdir = calcTransference(self.phrase[v].transfer)
+			if self.phrase[v].tdir ~= 5 then
+				pd.send(outbutton, "label", {tostring(self.phrase[v].tdir)})
+			end
 		
 			-- Send a message to the Monome button updater
 			self:outlet(3, "list", {outx, outy, 1})
-			
-			-- Send a color message to the Pd grid GUI, for the phrase that is the transference-target
-			local trcell = self.matrix[v][self.phrase[v].tdir]
-			if self.phrase[trcell].active == false then
-				local toutx, touty = keyToCoords(trcell, self.gridx, self.gridy, 1, 0)
-				local toutbutton = touty .. "-" .. toutx .. "-grid-button"
-				self:outlet(5, "list", rgbOutList(toutbutton, self.color[7][1], self.color[8][1]))
-			end
 			
 		else -- Off-toggle
 		
@@ -1623,9 +1645,9 @@ function Phrases:in_5_bang()
 			-- Send a message to the Monome button updater
 			self:outlet(3, "list", {outx, outy, 0})
 			
-			-- Send a color message to the Pd grid GUI
-			local outbutton = outy .. "-" .. outx .. "-grid-button"
+			-- Send a color message to the Pd grid GUI, then clear the cell's text
 			self:outlet(5, "list", rgbOutList(outbutton, self.color[8][1], self.color[8][1]))
+			pd.send(outbutton, "label", {""})
 			
 		end
 		

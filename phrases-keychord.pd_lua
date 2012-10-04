@@ -71,9 +71,10 @@ function KeyParser:in_1_list(cmd)
 				end
 			end
 			
-			-- If and only if the two tables are identical, send the command
+			-- If and only if the two tables are identical, send the command and empty the keysdown table
 			if sendflag == true then
 				self:outlet(1, "symbol", {k})
+				self.keysdown = {}
 			end
 		
 		end

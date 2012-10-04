@@ -2,7 +2,7 @@
 #X declare -lib mrpeach;
 #N canvas 57 33 957 464 phrases-editor-gui 1;
 #X restore 12 1049 pd phrases-editor-gui;
-#N canvas 467 14 517 542 phrases-gui-sender 1;
+#N canvas 467 14 517 542 phrases-gui-sender 0;
 #X msg 87 294 vis 1 \, clear;
 #X obj 176 15 list trim;
 #X obj 176 -8 r phrases-editor-gui-object;
