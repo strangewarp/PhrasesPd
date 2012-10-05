@@ -32,7 +32,7 @@ return {
 	end,
 
 	-- Table of user-readable note values, indexed appropriately
-	-- Pd keeps the pound sign (#) as a reserved character, and throws in a glut of annoying backslashes if any pound signs are passed to its parser, so we'll just use flats for now.
+	-- Pd keeps the pound sign (#) as a reserved character, and throws a fit if it has to handle them in any manner, so we'll just use flats for now.
 	notenames = {
 		"C",
 		"Db",
@@ -98,6 +98,19 @@ return {
 		"Persistence",
 	},
 	
+	-- Symbols used for transference directions on the grid
+	directions = {
+		"1",
+		"2",
+		"3",
+		"4",
+		"",
+		"6",
+		"7",
+		"8",
+		"9",
+	},
+	
 	-- Table of MIDI-input catching modes, which are tabbed through by the user and acted upon by other code
 	catchtypes = {
 		"all",
@@ -110,18 +123,6 @@ return {
 	modenames = {
 		"note",
 		"tr",
-	},
-	
-	directions = {
-		"1",
-		"2",
-		"3",
-		"4",
-		"",
-		"6",
-		"7",
-		"8",
-		"9",
 	},
 	
 }

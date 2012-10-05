@@ -13,6 +13,8 @@ TO-DO LIST (in rough order of desired implementation):
 
 * Thorough Debugging: Sequencer
 * --- Alpha Release Goes Here ---
+* Refine the grid GUI's handling of transference.
+* Add feature: Customizable ADC settings in a table file.
 * Add feature: MIDI-CLOCK capabilities.
 * Refactoring: Shunt as many functions as possible into Lua table files, and require said files into the relevant pdlua objects.
 * Refactoring: Replace laggy loops with pre-generated tables wherever possible.

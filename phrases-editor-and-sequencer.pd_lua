@@ -1508,9 +1508,25 @@ function Phrases:in_3_list(k)
 		if (k[3] == 1) -- Do this on down-keystrokes only
 		and (button <= #self.phrase) -- Only if the button maps to a currently-existant phrase
 		then
+		
+			-- Check whether the phrase has split transference
+			-- TODO: Refactor this so that its variable is pre-emptively generated upon changes to any phrase's transference
+			local splitcheck = 0
+			for i = 1, 9 do
+				if self.phrase[button].transfer[i] >= 1 then
+					splitcheck = splitcheck + 1
+				end
+			end
 			
 			if (#self.phrase[button].notes < self.gate) -- If the phrase has fewer notes than the gate value...
 			and (self.phrase[button].active == true) -- And is already active...
+			and (
+				( -- And has stationary-but-split transference...
+					(self.phrase[button].tdir == 5)
+					and (splitcheck >= 2)
+				)
+				or (self.phrase[button].tdir ~= 5) -- Or non-stationary transference of any kind...
+			)
 			then -- Then immediately turn it off, to prevent trainwrecks of short phrases
 				-- Reset the phrase's internal variables, MIDI sustains, GUI cell, and Monome button
 				local clearname = k[2] .. "-" .. k[1] .. "-grid-button"
@@ -1596,6 +1612,7 @@ function Phrases:in_4_bang()
 			local txold, tyold = keyToCoords(k, self.gridx, self.gridy, 1, 0)
 			local oldbutton = tyold .. "-" .. txold .. "-grid-button"
 			self:outlet(3, "list", {txold, tyold, 0})
+			self:outlet(4, "list", {txold, tyold, 0}) -- Override any blink commands that might lay a half-tick out in Pd
 			self:outlet(5, "list", rgbOutList(oldbutton, self.color[8][1], self.color[8][1]))
 			pd.send(oldbutton, "label", {""})
 		end
@@ -1644,6 +1661,7 @@ function Phrases:in_5_bang()
 			
 			-- Send a message to the Monome button updater
 			self:outlet(3, "list", {outx, outy, 0})
+			self:outlet(4, "list", {outx, outy, 0}) -- Override any blink commands that might lay a half-tick out in Pd
 			
 			-- Send a color message to the Pd grid GUI, then clear the cell's text
 			self:outlet(5, "list", rgbOutList(outbutton, self.color[8][1], self.color[8][1]))
