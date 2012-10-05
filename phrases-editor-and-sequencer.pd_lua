@@ -243,14 +243,6 @@ function Phrases:noteParse(k, note)
 	or (command == 128)
 	then
 
-		-- Change the offset to apply to sustains, based on incoming note-on/note-offs
-		local offset = 0
-		if comand == 128 then
-			offset = -1
-		elseif command == 144 then
-			offset = 1
-		end
-		
 		-- Create the parent tables if they don't exist
 		if self.midi[chan][pitch] == nil then
 			self.midi[chan][pitch] = 0
@@ -259,18 +251,27 @@ function Phrases:noteParse(k, note)
 			self.phrase[k].midi[chan][pitch] = 0
 		end
 
+		-- Change the offset to apply to sustains, based on incoming note-on/note-offs
+		local offset = 0
+		if command == 128 then
+			offset = -1
+		elseif command == 144 then
+			offset = 1
+			self:noteSend(k, note)
+		end
+		
 		-- Add the offset to both local and global sustain-tracking tables
 		self.phrase[k].midi[chan][pitch] = self.phrase[k].midi[chan][pitch] + offset
 		self.midi[chan][pitch] = self.midi[chan][pitch] + offset
-
-		if offset == 1 then
-			self:noteSend(k, note)
-		elseif self.phrase[k].midi[chan][pitch] <= 0 then
-			self.phrase[k].midi[chan][pitch] = nil
+		
+		-- Compensate for extraneous note-offs locally
+		if self.phrase[k].midi[chan][pitch] <= 0 then
+			self.phrase[k].midi[chan][pitch] = 0
 		end
 
+		-- Compensate for extraneous note-offs globally, and send a MIDI-OFF command if the global sustain is 0
 		if self.midi[chan][pitch] <= 0 then
-			self.midi[chan][pitch] = nil
+			self.midi[chan][pitch] = 0
 			self:noteSend(k, note)
 		end
 		
@@ -286,7 +287,9 @@ function Phrases:haltPhraseMidi(p)
 	-- For every currently active note in the phrase, send a MIDI-OFF through noteParse()
 	for chan, v in pairs(self.phrase[p].midi) do
 		for pitch, num in pairs(v) do
-			self:noteParse(p, {128 + chan, pitch, 127})
+			for i = 1, num do
+				self:noteParse(p, {128 + chan, pitch, 127})
+			end
 		end
 	end
 	
@@ -762,8 +765,11 @@ function Phrases:setDefaultVars(p)
 	self.phrase[p].midi = {} -- Local MIDI sustain table (not to be confused with the global MIDI sustain table)
 	
 	-- Fill MIDI sustain table with MIDI channel tables
-	for i = 0, 15 do
-		self.phrase[p].midi[i] = {}
+	for chan = 0, 15 do
+		self.phrase[p].midi[chan] = {}
+		for pitch = 1, 128 do
+			self.phrase[p].midi[chan][pitch] = 0
+		end
 	end
 	
 end
@@ -842,8 +848,11 @@ function Phrases:initialize(sel, atoms)
 	end
 	
 	self.midi = {} -- Table for tracking global MIDI sustain values
-	for i = 0, 15 do
-		self.midi[i] = {}
+	for chan = 0, 15 do
+		self.midi[chan] = {}
+		for pitch = 1, 128 do
+			self.midi[chan][pitch] = 0
+		end
 	end
 	
 	self.matrix = makeTrMatrix(self.gridx, self.gridy) -- Matrix to link keys to other keys, for transference use
