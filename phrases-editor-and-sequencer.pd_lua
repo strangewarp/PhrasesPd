@@ -251,25 +251,22 @@ function Phrases:noteParse(k, note)
 			self.phrase[k].midi[chan][pitch] = 0
 		end
 
-		-- Change the offset to apply to sustains, based on incoming note-on/note-offs
-		local offset = 0
+		-- Modify sustain values, based on incoming note-on/note-offs
 		if command == 128 then
-			offset = -1
+			self.midi[chan][pitch] = self.midi[chan][pitch] - self.phrase[k].midi[chan][pitch]
+			self.phrase[k].midi[chan][pitch] = 0
 		elseif command == 144 then
-			offset = 1
-			self:noteSend(k, note)
+			self.midi[chan][pitch] = self.midi[chan][pitch] + 1
+			self.phrase[k].midi[chan][pitch] = self.phrase[k].midi[chan][pitch] + 1
+			self:noteSend(k, note) -- Send all note-ons
 		end
-		
-		-- Add the offset to both local and global sustain-tracking tables
-		self.phrase[k].midi[chan][pitch] = self.phrase[k].midi[chan][pitch] + offset
-		self.midi[chan][pitch] = self.midi[chan][pitch] + offset
 		
 		-- Compensate for extraneous note-offs locally
 		if self.phrase[k].midi[chan][pitch] <= 0 then
 			self.phrase[k].midi[chan][pitch] = 0
 		end
 
-		-- Compensate for extraneous note-offs globally, and send a MIDI-OFF command if the global sustain is 0
+		-- Compensate for extraneous note-offs globally, and send a MIDI-OFF command if the global sustain is <=0
 		if self.midi[chan][pitch] <= 0 then
 			self.midi[chan][pitch] = 0
 			self:noteSend(k, note)
@@ -1527,7 +1524,15 @@ function Phrases:in_3_list(k)
 				end
 			end
 			
-			if (#self.phrase[button].notes < self.gate) -- If the phrase has fewer notes than the gate value...
+			-- Count the remaining ticks before the end of the phrase
+			local ticksleft = 0
+			for i = self.phrase[button].pointer, #self.phrase[button].notes do
+				if self.phrase[button].notes[i][1] == -1 then
+					ticksleft = ticksleft + 1
+				end
+			end
+			
+			if (ticksleft < self.gate) -- If the phrase has fewer remaining ticks than the gate value...
 			and (self.phrase[button].active == true) -- And is already active...
 			and (
 				( -- And has stationary-but-split transference...
@@ -1547,8 +1552,7 @@ function Phrases:in_3_list(k)
 				self:outlet(4, "list", {k[1], k[2], 0}) -- Override any blink commands that might lay a half-tick out in Pd
 				self:outlet(5, "list", rgbOutList(clearname, self.color[8][1], self.color[8][1]))
 				pd.send(clearname, "label", {""})
-			else
-				-- Record a keystroke to the global keystroke-queue, which is emptied and parsed on each gate tick
+			else -- Record a keystroke to the global keystroke-queue, which is emptied and parsed on each gate tick
 				table.insert(self.queue, button)
 				pd.post("Queued key: " .. button)
 			end

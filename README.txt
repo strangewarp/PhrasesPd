@@ -1,23 +1,22 @@
 
 WARNING PRE-ALPHA
 
-MOST FEATURES ARE MINIMALLY TESTED OR BUGGY
+MOST FEATURES ARE ONLY MINIMALLY TESTED
 
-TRANSFERENCE AND MIDI SUSTAINS CURRENTLY DO NOT FUNCTION PROPERLY
-
-Feel free to play around with the PhrasesPd editor and sequencer. I am still debugging transference and sustains, so if you try to use either of those, you may end up in uncharted territory.
+Feel free to play around with the PhrasesPd editor and sequencer. If you are using PhrasesPd in a mission-critical capacity, please double-check everything you want to do in advance, in order to avoid potential unforeseen bugs.
 
 
 
 TO-DO LIST (in rough order of desired implementation):
 
-* Thorough Debugging: Sequencer
+* Debugging: Sequencer
 * --- Alpha Release Goes Here ---
-* Refine the grid GUI's handling of transference.
-* Add feature: Customizable ADC settings in a table file.
+* Rewrite code: Store all user variables in a human-readable table file, and write a pdlua object to load them during initialization.
+* Rewrite code: Rewrite the grid GUI and all of its handlers so that each cell contains 8 sub-cells along its borders, in order to better display active transference.
+* Add feature: Customizable ADC settings that can be linked to MIDI values. (User-definable in savefiles. Number of ADCs defined in the user-prefs table file.) (Feature modeled after MidiFling)
 * Add feature: MIDI-CLOCK capabilities.
 * Refactoring: Shunt as many functions as possible into Lua table files, and require said files into the relevant pdlua objects.
-* Refactoring: Replace laggy loops with pre-generated tables wherever possible.
+* Refactoring: Replace laggy mechanisms with pre-generated variables wherever possible.
 * --- Beta Release Goes Here ---
 
 
