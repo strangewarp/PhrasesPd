@@ -144,6 +144,14 @@ return {
 	VIEW_MODE_TOGGLE = {
 		"Return",
 	},
+	
+	NOTE_PREVPAGE = {
+		"Prior",
+	},
+
+	NOTE_NEXTPAGE = {
+		"Next",
+	},
 
 	NOTE_PREV = {
 		"Up",
@@ -157,7 +165,7 @@ return {
 		"Home",
 	},
 	
-	NOTE_END = {
+	NOTE_INVERSE = {
 		"End",
 	},
 	
@@ -178,11 +186,13 @@ return {
 	},
 	
 	SPACING_INC = {
-		"Next",
+		"Shift",
+		"Up",
 	},
 
 	SPACING_DEC = {
-		"Prior",
+		"Shift",
+		"Down",
 	},
 	
 	CHANNEL_INC = {

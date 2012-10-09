@@ -11,7 +11,6 @@ TO-DO LIST (in rough order of desired implementation):
 
 * Debugging: Sequencer
 * --- Alpha Release Goes Here ---
-* Rewrite code: Store all user variables in a human-readable table file, and write a pdlua object to load them during initialization.
 * Rewrite code: Rewrite the grid GUI and all of its handlers so that each cell contains 8 sub-cells along its borders, in order to better display active transference.
 * Add feature: Customizable ADC settings that can be linked to MIDI values. (User-definable in savefiles. Number of ADCs defined in the user-prefs table file.) (Feature modeled after MidiFling)
 * Add feature: MIDI-CLOCK capabilities.
@@ -36,25 +35,44 @@ Puredata-extended 0.43-1 beta
 
 
 
-Installation
+Quick-Start Guide:
 
-1. Put all of PhrasesPd's .pd_lua and .lua files (EXCEPT FOR "phrases-hotseats.lua") into your /pd/extra directory.
-2. Make sure all of PhrasesPd's .pd files, plus "phrases-hotseats.lua", are in the same directory as one another. The directory itself can be wherever, but preferably somewhere convenient in your directory structure, as your savefiles will be loaded from within the same directory (or a subdirectory, if you specify so).
-3. Run "phrasespd.pd" in PureData.
-4. Change the settings to reflect your setup and directory structure, by clicking the "phrases-prefs" and "phrases-gui-prefs" subpatches, toggling into Puredata edit mode (Ctrl+E), and editing their hardcoded variables.
-5. Save your custom variables (Ctrl+S), and then close and reopen phrasespd.pd.
-6. Change the Puredata MIDI settings to reflect your default MIDI-IN and MIDI-OUT devices. Remember: This must be done every time Puredata is newly opened.
-7. Toggle into Puredata edit mode (Ctrl+E) to change the filenames in your savefile and loadfile hotseats, and then toggle back out of edit mode (Ctrl+E again) to click them. (You can save your hotseat configuration at any time with Ctrl+S. No restart required.) Clicking a hotseat will select that savefile or loadfile name. Remember: If these point to a subdirectory, that subdirectory must be made manually before attempting to save or load therein.
-8. You can now begin assembling phrases of MIDI data in the PhrasesPd editor, and playing them with your Monome.
+1. Put the following files into your /pd/extra directory:
+phrases-editor-and-sequencer.pd_lua
+phrases-get-prefs.pd_lua
+phrases-gui-generator.pd_lua
+phrases-gui-tables.lua
+phrases-keychord.pd_lua
+phrases-keychord-tables.lua
+phrases-main-tables.lua
+
+2. Place the following files in the same directory as one another:
+phrases-hotseats.lua
+phrases-makecolor.pd
+phrases-prefs.lua
+phrasespd.pd
+The directory itself can be wherever, but preferably somewhere convenient in your directory structure, as your savefiles will be loaded from within the same directory (or a subdirectory, if you specify so).
+
+3. Change the settings to reflect your setup and directory structure, by modifying the contents of phrases-prefs.lua.
+
+4. Run "phrasespd.pd" in PureData.
+
+5. Change the Puredata MIDI settings to reflect your default MIDI-IN and MIDI-OUT devices. Remember: This must be done every time Puredata is newly opened.
+
+6. You can now begin assembling phrases of MIDI data in the PhrasesPd editor, and playing them with your Monome.
+
+7. To save your song data: Click the "Custom Savefile" box, type in the desired filename, and hit Enter. Then, to save your data there, type Shift-?-|.
+
+8. To change the default loadfile hotseats, edit the contents of "phrases-hotseats.lua".
 
 
 
-Editor Commands
+Editor Commands (default keystrokes)
 
 Choose savefile name - Click a savefile hotseat in the main phrasespd.pd window
 Save file - Shift-?-|
 
-Choose loadfile name - Shift-[number], Shift-BackSpace-[number], OR click a loadfile hotseat in the main phrasespd.pd window
+Choose loadfile name - Shift-[number], Shift-BackSpace-[number], or click a loadfile hotseat in the main phrasespd.pd window
 Load file - Shift-Backspace-Enter (WARNING: Erases any unsaved changes)
 
 Toggle Recording/Play modes - Esc
@@ -62,7 +80,9 @@ Toggle Recording/Play modes - Esc
 Previous note - Up arrow
 Next note - Down arrow
 First note - Home
-Last note - End
+Opposite note - End
+Page up - PageUp
+Page down - PageDown
 
 Insert note - zsxdcvgbhnjm,lq2w3er5t6y7ui9o0p
 
@@ -72,8 +92,8 @@ Insert blank note - Backspace
 Previous phrase - Left arrow
 Next phrase - Right arrow
 
-Increase spacing - PageDown
-Decrease spacing - PageUp
+Increase spacing - Shift-Up
+Decrease spacing - Shift-Down
 
 Toggle between MIDI-Catch modes - Shift-O and Shift-P
 
@@ -88,9 +108,8 @@ MIDI velocity -10 - _
 Octave +1 - ]
 Octave -1 - [
 
-Next command - /
-Previous command - .
+Next command type - /
+Previous command type - .
 
 Toggle input mode - Insert
 Toggle number/pitch modes - Enter
-

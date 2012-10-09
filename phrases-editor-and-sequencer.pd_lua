@@ -357,7 +357,7 @@ function Phrases:updateNoteButton(cellx, celly, k, p) -- editor x pointer, edito
 	
 	local gsize = self.gridx * self.gridy
 	local offsetx = math.ceil(self.editorx / 2)
-	local offsety = math.floor(self.editory / 4)
+	local offsety = math.floor(self.editory / 2)
 	
 	local notex = (cellx + k) - offsetx
 	if (notex < 1)
@@ -790,15 +790,8 @@ function Phrases:initialize(sel, atoms)
 	-- 13. Grid Y cells
 	-- 14. Editor X cells
 	-- 15. Editor Y cells
-	-- 16. Editor GUI color 1
-	-- 17. Editor GUI color 2
-	-- 18. Editor GUI color 3
-	-- 19. Editor GUI color 4
-	-- 20. Grid GUI color 1
-	-- 21. Grid GUI color 2
-	-- 22. Grid GUI color 3
-	-- 23. Grid GUI color 4
-	self.inlets = 23
+	-- 16. GUI color lists
+	self.inlets = 16
 	
 	-- 1. Editor note-send out (to delayed note-off as well)
 	-- 2. Sequencer note-send out
@@ -1146,7 +1139,7 @@ function Phrases:in_1_list(list)
 		f:close()
 		
 		pd.post("Data saved to " .. self.filepath .. self.savename)
-	
+		
 	elseif (cmd == "NOTE_NEXT") -- Advance the note pointer
 	or (cmd == "NOTE_PREV") -- Retreat the note pointer
 	then
@@ -1164,21 +1157,30 @@ function Phrases:in_1_list(list)
 		end
 		
 		self:updateEditorGUI()
-		pd.post("Active note: " .. self.pointer)
+	
+	elseif cmd == "NOTE_PREVPAGE" then -- Retreat the note pointer by the editor-window's page-height
+	
+		self.pointer = (((self.pointer - math.floor(self.editory / 2)) - 1) % #self.phrase[self.key].notes) + 1
+		
+		self:updateEditorGUI()
+		
+	elseif cmd == "NOTE_NEXTPAGE" then -- Advance the pointer by the editor-window's page-height
+	
+		self.pointer = (((self.pointer + math.floor(self.editory / 2)) - 1) % #self.phrase[self.key].notes) + 1
+		
+		self:updateEditorGUI()
 	
 	elseif cmd == "NOTE_HOME" then -- Set pointer to beginning of phrase
 	
 		self.pointer = 1
 		
 		self:updateEditorGUI()
-		pd.post("Active note: " .. self.pointer)
 	
-	elseif cmd == "NOTE_END" then -- Set pointer to end of phrase
+	elseif cmd == "NOTE_INVERSE" then -- Set pointer to the opposite side of the phrase
 	
-		self.pointer = #self.phrase[self.key].notes
-		
+		self.pointer = (((math.ceil(#self.phrase[self.key].notes / 2) + self.pointer) - 1) % #self.phrase[self.key].notes) + 1
+	
 		self:updateEditorGUI()
-		pd.post("Active note: " .. self.pointer)
 	
 	elseif (cmd == "KEY_PREV") -- Toggle to previous phrase
 	or (cmd == "KEY_NEXT") -- Or next phrase
@@ -1598,9 +1600,7 @@ function Phrases:in_4_bang()
 			local bname = guiy .. "-" .. guix .. "-grid-button"
 			self:outlet(5, "list", rgbOutList(bname, rgbout, self.color[7][1]))
 			
-			--if v.tdir ~= 5 then
 			pd.send(bname, "label", {directions[v.tdir]}) -- Send the relevant transference direction symbol
-			--end
 		
 		end
 		
@@ -1751,40 +1751,8 @@ end
 
 -- Get GUI color-values
 function Phrases:in_16_list(c)
-	self.color[1] = modColor(c)
-end
-
--- Get GUI color-value
-function Phrases:in_17_list(c)
-	self.color[2] = modColor(c)
-end
-
--- Get GUI color-value
-function Phrases:in_18_list(c)
-	self.color[3] = modColor(c)
-end
-
--- Get GUI color-value
-function Phrases:in_19_list(c)
-	self.color[4] = modColor(c)
-end
-
--- Get GUI color-value
-function Phrases:in_20_list(c)
-	self.color[5] = modColor(c)
-end
-
--- Get GUI color-value
-function Phrases:in_21_list(c)
-	self.color[6] = modColor(c)
-end
-
--- Get GUI color-value
-function Phrases:in_22_list(c)
-	self.color[7] = modColor(c)
-end
-
--- Get GUI color-value
-function Phrases:in_23_list(c)
-	self.color[8] = modColor(c)
+	
+	local ckey = table.remove(c, 1)
+	self.color[ckey] = modColor(c)
+	
 end
