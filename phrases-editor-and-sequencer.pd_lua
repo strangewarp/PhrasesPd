@@ -778,20 +778,21 @@ function Phrases:initialize(sel, atoms)
 	-- 1. Key commands
 	-- 2. MIDI-IN
 	-- 3. Monome button
-	-- 4. Tempo ticks
-	-- 5. Gate bangs
-	-- 6. Loadfile name
-	-- 7. Savefile name
-	-- 8. Savepath name
-	-- 9. Global BPM
-	-- 10. Global TPB
-	-- 11. Global GATE
-	-- 12. Grid X cells
-	-- 13. Grid Y cells
-	-- 14. Editor X cells
-	-- 15. Editor Y cells
-	-- 16. GUI color lists
-	self.inlets = 16
+	-- 4. Monome ADC
+	-- 5. Tempo ticks
+	-- 6. Gate bangs
+	-- 7. Loadfile name
+	-- 8. Savefile name
+	-- 9. Savepath name
+	-- 10. Global BPM
+	-- 11. Global TPB
+	-- 12. Global GATE
+	-- 13. Grid X cells
+	-- 14. Grid Y cells
+	-- 15. Editor X cells
+	-- 16. Editor Y cells
+	-- 17. GUI color lists
+	self.inlets = 17
 	
 	-- 1. Editor note-send out (to delayed note-off as well)
 	-- 2. Sequencer note-send out
@@ -844,6 +845,8 @@ function Phrases:initialize(sel, atoms)
 			self.midi[chan][pitch] = 0
 		end
 	end
+	
+	self.adc = {} -- Table for a song's ADC values
 	
 	self.matrix = makeTrMatrix(self.gridx, self.gridy) -- Matrix to link keys to other keys, for transference use
 	
@@ -984,6 +987,7 @@ function Phrases:in_1_list(list)
 			local ltab = self:dofile(self.loadname)
 			
 			self.phrase = {} -- Unset all phrase data
+			self.adc = {} -- Unset all ADC data
 		
 			for k, v in pairs(ltab) do -- Load all data tables
 			
@@ -1038,7 +1042,26 @@ function Phrases:in_1_list(list)
 		o = o .. "\t[\"bpm\"] = " .. self.bpm .. ", -- Global beats-per-minute\n" -- Save BPM
 		o = o .. "\t[\"tpb\"] = " .. self.tpb .. ", -- Global ticks-per-beat\n" -- Save TPB
 		o = o .. "\t[\"gate\"] = " .. self.gate .. ", -- Global gate size\n" -- Save gating
-		o = o .. "\n"
+		
+		o = o .. "\n\n\t[\"adc\"] = {\n\n"
+		
+		for k, v in ipairs(self.adc) do
+		
+			o = o .. "\t\t{\n"
+			
+			o = o .. "\t\t\t[\"effect\"] = \"" .. v.effect .. "\",\n"
+			o = o .. "\t\t\t[\"target\"] = \"" .. v.target .. "\",\n"
+			o = o .. "\t\t\t[\"chan\"] = " .. v.chan .. ",\n"
+			o = o .. "\t\t\t[\"range\"] = " .. v.range .. ",\n"
+			o = o .. "\t\t\t[\"offset\"] = " .. v.offset .. ",\n"
+			o = o .. "\t\t\t[\"val\"] = 0,\n"
+			
+			o = o .. "\t\t},\n\n"
+			
+		end
+		
+		o = o .. "\t},\n\n"
+		
 		o = o .. "\t[\"phrase\"] = {\n\n" -- Parent phrase table
 	
 		-- Add all phrase data to the long string
@@ -1565,8 +1588,20 @@ function Phrases:in_3_list(k)
 	
 end
 
+-- Interpret an incoming Monome ADC command
+function Phrases:in_4_list(adc)
+
+	adc[1] = adc[1] + 1 -- Convert from 0-indexed to 1-indexed
+
+	if self.adc[adc[1]] ~= nil then
+		self.adc[adc[1]].val = adc[2]
+		pd.post("ADC " .. adc[1] .. ": " .. adc[2])
+	end
+
+end
+
 -- React to incoming tempo ticks
-function Phrases:in_4_bang()
+function Phrases:in_5_bang()
 
 	-- Update the gate-button's color, based on the current tick
 	local rgbgate = {}
@@ -1639,7 +1674,7 @@ function Phrases:in_4_bang()
 end
 
 -- React to bangs that signify the gate has been reached
-function Phrases:in_5_bang()
+function Phrases:in_6_bang()
 
 	self.tick = 1
 	
@@ -1690,7 +1725,7 @@ function Phrases:in_5_bang()
 end
 
 -- Get loadfile name
-function Phrases:in_6_list(s)
+function Phrases:in_7_list(s)
 	-- table.concat() is necessary, because Pd will interpret paths that contain spaces as lists
 	self.loadname = table.concat(s, " ")
 	pd.post("Current loadfile name is now: " .. self.loadname)
@@ -1698,7 +1733,7 @@ function Phrases:in_6_list(s)
 end
 
 -- Get savefile name
-function Phrases:in_7_list(s)
+function Phrases:in_8_list(s)
 	-- table.concat() is necessary, because Pd will interpret paths that contain spaces as lists
 	self.savename = table.concat(s, " ")
 	pd.post("Current savefile name (including path) is now: " .. self.filepath .. self.savename)
@@ -1706,51 +1741,51 @@ function Phrases:in_7_list(s)
 end
 
 -- Get savefile path
-function Phrases:in_8_list(s)
+function Phrases:in_9_list(s)
 	-- table.concat() is necessary, because Pd will interpret paths that contain spaces as lists
 	self.filepath = table.concat(s, " ")
 	pd.post("Current savefile path is now: " .. self.filepath)
 end
 
 -- Get global BPM value
-function Phrases:in_9_float(f)
+function Phrases:in_10_float(f)
 	self.bpm = f
 end
 
 -- Get global TPB value
-function Phrases:in_10_float(f)
+function Phrases:in_11_float(f)
 	self.tpb = f
 end
 
 -- Get global GATE value
-function Phrases:in_11_float(f)
+function Phrases:in_12_float(f)
 	self.gate = f
 end
 
 -- Get global grid-width
-function Phrases:in_12_float(x)
+function Phrases:in_13_float(x)
 	self.gridx = x
 	self.matrix = makeTrMatrix(self.gridx, self.gridy)
 end
 
 -- Get global grid-height
-function Phrases:in_13_float(y)
+function Phrases:in_14_float(y)
 	self.gridy = y
 	self.matrix = makeTrMatrix(self.gridx, self.gridy)
 end
 
 -- Get global editor-width
-function Phrases:in_14_float(x)
+function Phrases:in_15_float(x)
 	self.editorx = x
 end
 
 -- Get global editor-height
-function Phrases:in_15_float(y)
+function Phrases:in_16_float(y)
 	self.editory = y
 end
 
 -- Get GUI color-values
-function Phrases:in_16_list(c)
+function Phrases:in_17_list(c)
 	
 	local ckey = table.remove(c, 1)
 	self.color[ckey] = modColor(c)

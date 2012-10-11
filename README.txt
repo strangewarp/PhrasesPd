@@ -53,7 +53,7 @@ phrases-prefs.lua
 phrasespd.pd
 The directory itself can be wherever, but preferably somewhere convenient in your directory structure, as your savefiles will be loaded from within the same directory (or a subdirectory, if you specify so).
 
-3. Change the settings to reflect your setup and directory structure, by modifying the contents of phrases-prefs.lua.
+3. Change the settings to reflect your setup and directory structure, by modifying the contents of "phrases-prefs.lua".
 
 4. Run "phrasespd.pd" in PureData.
 
@@ -69,10 +69,10 @@ The directory itself can be wherever, but preferably somewhere convenient in you
 
 Editor Commands (default keystrokes)
 
-Choose savefile name - Click a savefile hotseat in the main phrasespd.pd window
+Choose savefile name - Enter a custom savefile name in the main phrasespd.pd window
 Save file - Shift-?-|
 
-Choose loadfile name - Shift-[number], Shift-BackSpace-[number], or click a loadfile hotseat in the main phrasespd.pd window
+Choose loadfile name - Shift-[number], Shift-BackSpace-[number], or enter a custom loadfile name in the main phrasespd.pd window
 Load file - Shift-Backspace-Enter (WARNING: Erases any unsaved changes)
 
 Toggle Recording/Play modes - Esc
