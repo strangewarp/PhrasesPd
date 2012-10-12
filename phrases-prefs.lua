@@ -6,8 +6,8 @@ return {
 		grid = { -- Grid GUI window
 			xpixels = 400, -- Width (in pixels)
 			ypixels = 400, -- Height (in pixels)
-			xmargin = 2, -- Horizontal margins (in pixels)
-			ymargin = 2, -- Vertical margins (in pixels)
+			xmargin = 3, -- Horizontal margins (in pixels)
+			ymargin = 3, -- Vertical margins (in pixels)
 		},
 		
 		editor = { -- Editor GUI window
@@ -24,10 +24,10 @@ return {
 			{50, 50, 180}, -- Editor BG 2
 			{40, 40, 40}, -- Editor BG 3
 			{230, 250, 230}, -- Editor Labels
-			{230, 30, 30}, -- Grid BG 1
-			{30, 30, 230}, -- Grid BG 2
-			{200, 255, 200}, -- Grid Labels
-			{120, 120, 120}, -- Grid Neutral
+			{20, 255, 20}, -- Grid BG 1 (main color 1)
+			{30, 30, 230}, -- Grid BG 2 (main color 2)
+			{250, 30, 30}, -- Grid BG 3 (transference)
+			{120, 120, 120}, -- Grid BG 4 (neutral)
 		},
 		
 	},

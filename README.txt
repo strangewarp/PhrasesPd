@@ -11,7 +11,6 @@ TO-DO LIST (in rough order of desired implementation):
 
 * Debugging: Sequencer
 * --- Alpha Release Goes Here ---
-* Rewrite code: Rewrite the grid GUI and all of its handlers so that each cell contains 8 sub-cells along its borders, in order to better display active transference.
 * Add feature: Customizable ADC settings that can be linked to MIDI values. (User-definable in savefiles. Number of ADCs defined in the user-prefs table file.) (Feature modeled after MidiFling)
 * Add feature: MIDI-CLOCK capabilities.
 * Refactoring: Shunt as many functions as possible into Lua table files, and require said files into the relevant pdlua objects.
@@ -47,6 +46,7 @@ phrases-keychord-tables.lua
 phrases-main-tables.lua
 
 2. Place the following files in the same directory as one another:
+default.lua
 phrases-hotseats.lua
 phrases-makecolor.pd
 phrases-prefs.lua

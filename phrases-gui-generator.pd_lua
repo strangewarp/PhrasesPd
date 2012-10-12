@@ -162,11 +162,28 @@ function GUIGenerator:in_1_bang()
 	
 	-- Generate grid-window cells
 	local gridnames = {}
+	local subgrids = {}
 	for y = 0, self.gridcy - 1 do
+	
+		subgrids[y] = {}
+	
 		for x = 0, self.gridcx - 1 do
-			table.insert(gridnames, y .. "-" .. x .. "-grid-button")
+		
+			subgrids[y][x] = {}
+			
+			local buttonname = y .. "-" .. x .. "-grid"
+			
+			table.insert(gridnames, buttonname .. "-button")
+			
+			for subnum = 1, 9 do
+				table.insert(subgrids[y][x], buttonname .. "-sub-" .. subnum)
+			end
+		
 		end
+		
 	end
+	
+	-- Build main grid cells
 	buildGrid(
 		gridnames, -- List of the object names to make into a grid
 		"phrases-grid-gui-object", -- Send generated objects to this object
@@ -181,6 +198,26 @@ function GUIGenerator:in_1_bang()
 		math.floor(self.gridcheight / 2), -- Label Y-offset
 		self.gridcheight -- Font size
 	)
+	
+	-- Build sub-cells
+	for y, v in pairs(subgrids) do
+		for x, names in pairs(v) do
+			buildGrid(
+				names,
+				"phrases-grid-gui-object",
+				3,
+				((self.gridmx + self.gridcwidth) * x) + self.gridmx,
+				((self.gridmy + self.gridcheight) * y) + self.gridmy,
+				math.floor(self.gridcwidth / 5),
+				math.floor(self.gridcheight / 5),
+				math.ceil(self.gridcwidth / 5),
+				math.ceil(self.gridcheight / 5),
+				0,
+				0,
+				12
+			)
+		end
+	end
 
 	-- Generate gate-window side-panel
 	buildGrid(

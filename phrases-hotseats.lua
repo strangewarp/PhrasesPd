@@ -1,7 +1,7 @@
 
 return {
 
-	"test/test.lua",
+	"default.lua",
 	"test/test2.lua",
 	"test/test3.lua",
 	"test/test4.lua",

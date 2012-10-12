@@ -98,19 +98,6 @@ return {
 		"Persistence",
 	},
 	
-	-- Symbols used for transference directions on the grid
-	directions = {
-		"1",
-		"2",
-		"3",
-		"4",
-		"",
-		"6",
-		"7",
-		"8",
-		"9",
-	},
-	
 	-- Table of MIDI-input catching modes, which are tabbed through by the user and acted upon by other code
 	catchtypes = {
 		"all",
