@@ -1,21 +1,9 @@
 
-WARNING PRE-ALPHA
+WARNING ALPHA
 
 MOST FEATURES ARE ONLY MINIMALLY TESTED
 
 Feel free to play around with the PhrasesPd editor and sequencer. If you are using PhrasesPd in a mission-critical capacity, please double-check everything you want to do in advance, in order to avoid potential unforeseen bugs.
-
-
-
-TO-DO LIST (in rough order of desired implementation):
-
-* Debugging: Sequencer
-* --- Alpha Release Goes Here ---
-* Add feature: Customizable ADC settings that can be linked to MIDI values. (User-definable in savefiles. Number of ADCs defined in the user-prefs table file.) (Feature modeled after MidiFling)
-* Add feature: MIDI-CLOCK capabilities.
-* Refactoring: Shunt as many functions as possible into Lua table files, and require said files into the relevant pdlua objects.
-* Refactoring: Replace laggy mechanisms with pre-generated variables wherever possible.
-* --- Beta Release Goes Here ---
 
 
 
@@ -25,12 +13,23 @@ PhrasesPd is a MIDI sequencer, for arbitrarily-sized grid controllers capable of
 
 It has an integrated sequence editor, which is controlled by a combination of computer keyboard, MIDI controller, and grid controller.
 
-Sequences are saved as Lua table files, in a manner that is both executable and decently human-readable. In the future, this may change to a different standardized format, but if so I'll write a converter.
+Song data is saved as Lua table files, in a manner that is both executable and decently human-readable.
 
 
 
 Dependencies:
 Puredata-extended 0.43-1 beta
+
+
+
+TO-DO LIST (in rough order of desired implementation):
+
+* Debugging: Figure out what's causing lag spikes on weak computers when a phrase with multiple dangling sustains is deactivated.
+* Add feature: ADC capabilities, plus editor panel.
+* Add feature: MIDI-CLOCK capabilities.
+* Refactoring: Shunt as many functions as possible into Lua table files, and require said files into the relevant pdlua objects.
+* Refactoring: Replace laggy mechanisms with pre-generated variables wherever possible.
+* --- Beta Release Goes Here ---
 
 
 

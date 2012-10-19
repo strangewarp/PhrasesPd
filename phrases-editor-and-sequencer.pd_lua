@@ -241,7 +241,7 @@ function Phrases:noteParse(k, note)
 	if (command == 144)
 	or (command == 128)
 	then
-
+		
 		-- Create the parent tables if they don't exist
 		if self.midi[chan][pitch] == nil then
 			self.midi[chan][pitch] = 0
@@ -326,9 +326,6 @@ function Phrases:iterate(k)
 				self.phrase[k].active = false
 				self:haltPhraseMidi(k)
 			end
-			
-			-- Calculate a new transference value for the phrase's next cycle
-			self.phrase[k].tdir = calcTransference(self.phrase[k].transfer)
 			
 		end
 		
@@ -1098,34 +1095,14 @@ function Phrases:in_1_list(list)
 			o = o .. "},\n" -- Close transference table
 			
 			o = o .. "\t\t\t[\"notes\"] = {\n" -- Phrase notes
-			local sn = 0 -- Track the number of iteration-stopping notes, to properly position gate comments
-			local sskip = 0 -- Track the number of non-iteration-stopping notes that the gate-checker has skipped
-			local sbr = false -- Track when newlines and tabs are required amongst the note tables
-			local sgnum = 0 -- Track which lines should have a gate-note comment
-			local sgitem = 0 -- Track which line items are the gate tick, for multi-item lines
+			
+			local snum = 0 -- Track the number of ticks
 			for k2, v2 in ipairs(v.notes) do
 			
-				if v2[1] == -1 then -- Only increment the note-tracking variable for halting commands
-					sn = sn + 1
-				else
-					sskip = sskip + 1
-				end
-			
-				if ((sn - 1) % self.gate) == 0 then -- If the note falls on a gate tick, set the relevant flag
-					if sgnum == 0 then -- Only set the gate-note comment flag if it hasn't been set earlier in the line
-						sgnum = sn
-					end
-				end
-				
-				if (sbr == true)
-				or (k2 == 1)
-				then -- Ensure newlines are properly tabbed, checking for multi-item lines
-					o = o .. "\t\t\t\t"
-					sbr = false -- Unset newline-okay flag
-				end
+				o = o .. "\t\t\t\t"
 				
 				o = o .. "{" -- Open note-value table
-				-- Individual MIDI note values
+				-- Individual MIDI byte values
 				for k3, v3 in ipairs(v2) do
 					if k3 > 1 then
 						o = o .. ", "
@@ -1134,37 +1111,15 @@ function Phrases:in_1_list(list)
 				end
 				o = o .. "}," -- Close note-value table
 				
-				if (v.notes[k2 + 1] ~= nil) -- Peek at the next note to judge whether a newline is appropriate
-				and (
-					(v.notes[k2 + 1][1] ~= -1)
-					or rangeCheck(v.notes[k2 + 1][1], 128, 159)
-				)
-				then -- If any notes in the previous line fell on a gate tick, offer up some metadata
-					if sgnum > 0 then
-						o = o .. " -- Gate tick (note " .. sgnum .. ")"
-						o = o .. " (" .. self.gate .. " * " .. math.floor((sgnum - 1) / self.gate) .. " + 1)"
-						o = o .. " (line item " .. (sgitem + 1) .. ")"
-						if sskip > 0 then
-							o = o .. " (skipped " .. sskip .. " instant commands)"
-							sskip = 0
-						end
-						sgnum = 0
-					end
-					sbr = true -- Set newline-okay flag
+				if v2[1] == -1 then -- Add a tick comment, if applicable
+					snum = snum + 1
+					o = o .. " -- Tick " .. snum
 				end
 				
-				if sbr == true then -- If the newline flag is set, insert a newline; else insert a space
-					o = o .. "\n"
-					sgitem = 0
-				else
-					o = o .. " "
-					if sgnum == 0 then -- If no notes on this line fell on a gate tick yet, increase the line-item number
-						sgitem = sgitem + 1
-					end
-				end
+				o = o .. "\n"
 				
 			end
-			o = o .. "\n"
+			
 			o = o .. "\t\t\t}\n" -- Close notes table
 			
 			o = o .. "\t\t},\n" -- Close phrase table
@@ -1598,8 +1553,6 @@ function Phrases:in_3_list(k)
 				for i = 1, 9 do -- Clear transference sub-buttons
 					if self.phrase[button].transfer[i] > 0 then
 						self:outlet(5, "list", rgbOutList(clearname .. "sub-" .. i, self.color[8][3], self.color[8][3]))
-					else
-						self:outlet(5, "list", rgbOutList(clearname .. "sub-" .. i, self.color[8][2], self.color[8][2]))
 					end
 				end
 			else -- Record a keystroke to the global keystroke-queue, which is emptied and parsed on each gate tick
@@ -1620,7 +1573,6 @@ function Phrases:in_4_list(adc)
 
 	if self.adc[adc[1]] ~= nil then
 		self.adc[adc[1]].val = adc[2]
-		pd.post("ADC " .. adc[1] .. ": " .. adc[2])
 	end
 
 end
@@ -1684,7 +1636,7 @@ function Phrases:in_5_bang()
 		
 		local trax, tray = keyToCoords(trnew, self.gridx, self.gridy, 1, 0)
 		self:outlet(3, "list", {trax, tray, 1})
-		self:outlet(5, "list", rgbOutList(tray .. "-" .. trax .. "-grid-button", self.color[8][2], self.color[8][2]))
+		self:outlet(5, "list", rgbOutList(tray .. "-" .. trax .. "-grid-button", self.color[5][1], self.color[5][1]))
 		
 		-- Clean up the GUI of the phrase whose activity caused the transference in the first place
 		if k ~= trnew then
@@ -1696,8 +1648,6 @@ function Phrases:in_5_bang()
 			for i = 1, 9 do -- Clear transference sub-buttons
 				if self.phrase[k].transfer[i] > 0 then
 					self:outlet(5, "list", rgbOutList(oldbutton .. "sub-" .. i, self.color[8][3], self.color[8][3]))
-				else
-					self:outlet(5, "list", rgbOutList(oldbutton .. "sub-" .. i, self.color[8][2], self.color[8][2]))
 				end
 			end
 		end
@@ -1726,13 +1676,13 @@ function Phrases:in_6_bang()
 		
 			-- Since the phrase was just activated, calculate a new transference direction, and send its info to the GUI
 			self.phrase[v].tdir = calcTransference(self.phrase[v].transfer)
-			for i = 1, 9 do
-				if self.phrase[v].tdir == i then
-					self:outlet(5, "list", rgbOutList(outbutton .. "sub-" .. i, self.color[7][3], self.color[7][3]))
-				elseif self.phrase[v].transfer[i] > 0 then
-					self:outlet(5, "list", rgbOutList(outbutton .. "sub-" .. i, self.color[7][2], self.color[7][2]))
-				end
-			end
+			--for i = 1, 9 do
+			--	if self.phrase[v].tdir == i then
+			--		self:outlet(5, "list", rgbOutList(outbutton .. "sub-" .. i, self.color[7][3], self.color[7][3]))
+			--	elseif self.phrase[v].transfer[i] > 0 then
+			--		self:outlet(5, "list", rgbOutList(outbutton .. "sub-" .. i, self.color[7][2], self.color[7][2]))
+			--	end
+			--end
 		
 			-- Send a message to the Monome button updater
 			self:outlet(3, "list", {outx, outy, 1})
@@ -1757,8 +1707,6 @@ function Phrases:in_6_bang()
 			for i = 1, 9 do
 				if self.phrase[v].transfer[i] > 0 then
 					self:outlet(5, "list", rgbOutList(outbutton .. "sub-" .. i, self.color[8][3], self.color[8][3]))
-				else
-					self:outlet(5, "list", rgbOutList(outbutton .. "sub-" .. i, self.color[8][2], self.color[8][2]))
 				end
 			end
 			
