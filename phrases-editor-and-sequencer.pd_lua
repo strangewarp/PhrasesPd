@@ -564,6 +564,9 @@ function Phrases:updateMIDICatchButton()
 	elseif self.midicatch == "no-offs" then
 		self:outlet(5, "list", rgbOutList("phrases-editor-midicatch-button", self.color[2][1], self.color[4][1]))
 		pd.send("phrases-editor-midicatch-button", "label", {"Catch: No Offs"})
+	elseif self.midicatch == "auto-offs" then
+		self:outlet(5, "list", rgbOutList("phrases-editor-midicatch-button", self.color[1][1], self.color[4][1]))
+		pd.send("phrases-editor-midicatch-button", "label", {"Catch: Auto Offs"})
 	elseif self.midicatch == "notes" then
 		self:outlet(5, "list", rgbOutList("phrases-editor-midicatch-button", self.color[2][1], self.color[4][1]))
 		pd.send("phrases-editor-midicatch-button", "label", {"Catch: Notes"})
@@ -738,6 +741,41 @@ end
 
 
 
+-- Inserts an OFF-note at the location of the pointer, if there is at least one other ON-note on the same MIDI channel at any point in the phrase.
+function Phrases:insertAutoOff()
+
+	local offchan = nil
+	local offnote = nil
+	local iterc = (self.pointer % #self.phrase[self.key].notes) + 1
+	
+	while iterc ~= self.pointer do
+	
+		if (self.phrase[self.key].notes[iterc][1] % 16) == self.channel then
+			offchan = self.phrase[self.key].notes[iterc][1] % 16
+			offnote = self.phrase[self.key].notes[iterc][2]
+		end
+		
+		iterc = (iterc % #self.phrase[self.key].notes) + 1
+		
+	end
+	
+	if offchan ~= nil then
+	
+		offchan = offchan + 128
+		local offbytes = {offchan, offnote, 127}
+		
+		table.insert(self.phrase[self.key].notes, self.pointer, offbytes)
+		
+		self.pointer = self.pointer + 1
+		
+		pd.post("Inserted note " .. table.concat(offbytes, " ") .. " at point " .. (self.pointer - 1))
+	
+	end
+	
+end
+
+
+
 function Phrases:setDefaultNotes(p)
 
 	if self.phrase[p] == nil then
@@ -898,6 +936,13 @@ function Phrases:in_1_list(list)
 				if self.spacing > 0 then
 					for i = 1, self.spacing do
 						table.insert(self.phrase[self.key].notes, self.pointer, {-1})
+					end
+				end
+				
+				if rangeCheck(self.command, 144, 159) then -- If incoming note-on...
+					-- If in auto-offs mode, insert a note-off if applicable
+					if self.midicatch == "auto-offs" then
+						self:insertAutoOff()
 					end
 				end
 				
@@ -1423,6 +1468,21 @@ end
 -- Receive MIDI notes from a MIDI device
 function Phrases:in_2_list(note)
 
+	-- Interpret the message's channel value, and save it internally
+	-- Unsure whether this feature would be annoying or not
+	--if self.channel ~= (note[1] % 16) then
+	--	self.channel = note[1] % 16
+	--end
+	
+	-- Interpret the message's command value, and save it internally
+	if note[1] >= 128 then
+		self.command = note[1] - (note[1] % 16)
+		note[1] = self.command + self.channel -- Convert the incoming note's channel to the user-defined channel
+	end
+	
+	-- Map the incoming note to the current octave setting, then bound its value to the 0-127 range
+	note[2] = (note[2] + (self.octave * 12)) % 128
+	
 	if self.recording == true then -- If recording-mode is toggled on...
 	
 		if (self.midicatch == "all") -- If all incoming MIDI is captured...
@@ -1432,21 +1492,11 @@ function Phrases:in_2_list(note)
 		) or (
 			(self.midicatch == "no-offs") -- Or incoming MIDI bytes are captured except for note-offs,
 			and not(rangeCheck(note[1], 128, 143)) -- And the incoming MIDI byte is not a note-off...
+		) or (
+			(self.midicatch == "auto-offs") -- Or incoming MIDI bytes are captured, with note-offs automatically generated...
+			and not(rangeCheck(note[1], 128, 143)) -- And the incoming MIDI byte is not a note-off...
 		)
 		then
-	
-			-- Interpret the message's channel and command values, and save them internally
-			if (self.channel ~= (note[1] % 16))
-			and (note[1] >= 128)
-			then
-				self.channel = note[1] % 16
-				self.command = note[1] - self.channel
-			end
-			
-			if rangeCheck(note[1], 128, 159) then
-				-- Map the incoming note to the current octave setting, then bound its value to the 0-127 range
-				note[2] = (note[2] + (self.octave * 12)) % 128
-			end
 			
 			-- Insert a dummy byte at byte 3, if the MIDI message has two bytes
 			if #note < 3 then
@@ -1458,6 +1508,11 @@ function Phrases:in_2_list(note)
 				for i = 1, self.spacing do
 					table.insert(self.phrase[self.key].notes, self.pointer, {-1})
 				end
+			end
+			
+			-- If in auto-offs mode, insert a note-off if applicable
+			if self.midicatch == "auto-offs" then
+				self:insertAutoOff()
 			end
 			
 			-- Insert MIDI note
@@ -1482,6 +1537,11 @@ function Phrases:in_2_list(note)
 		
 		end
 		
+	end
+	
+	-- Send MIDI note to outlet, regardless of whether the editor is recording, so long as the editor is in note mode
+	if self.inputmode == "note" then
+		self:outlet(1, "list", note)
 	end
 	
 end

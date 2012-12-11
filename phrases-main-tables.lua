@@ -102,6 +102,7 @@ return {
 	catchtypes = {
 		"all",
 		"no-offs",
+		"auto-offs",
 		"notes",
 		"ignore",
 	},
