@@ -237,4 +237,44 @@ return {
 		".",
 	},
 	
+	SHIFT_NOTE_DOWN = {
+		"Shift",
+		"A",
+	},
+	
+	SHIFT_NOTE_UP = {
+		"Shift",
+		"S",
+	},
+	
+	SHIFT_VELOCITY_DOWN = {
+		"Shift",
+		"Z",
+	},
+	
+	SHIFT_VELOCITY_UP = {
+		"Shift",
+		"X",
+	},
+	
+	SHIFT_ALL_NOTES_DOWN = {
+		"Shift",
+		"D",
+	},
+	
+	SHIFT_ALL_NOTES_UP = {
+		"Shift",
+		"F",
+	},
+	
+	SHIFT_ALL_VELOCITY_DOWN = {
+		"Shift",
+		"C",
+	},
+	
+	SHIFT_ALL_VELOCITY_UP = {
+		"Shift",
+		"V",
+	},
+	
 }

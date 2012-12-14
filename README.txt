@@ -24,11 +24,11 @@ Puredata-extended 0.43-1 beta
 
 TO-DO LIST (in rough order of desired implementation):
 
-* Debugging: Figure out what's causing lag spikes on weak computers when a phrase with multiple dangling sustains is deactivated.
+* Compatibility: Ensure that PhrasesPd is compatible with the final version of Pd-extended 0.43, once Pd-extended 0.43 is out of beta.
+* Debugging: Figure out what's causing lag spikes on weak computers when a phrase with multiple dangling sustains is deactivated. (This can be alleviated by dilligent use of closing NOTE-OFF commands for every NOTE-ON)
 * Add feature: ADC capabilities, plus editor panel.
 * Add feature: MIDI-CLOCK capabilities.
 * Refactoring: Shunt as many functions as possible into Lua table files, and require said files into the relevant pdlua objects.
-* Refactoring: Replace laggy mechanisms with pre-generated variables wherever possible.
 * --- Beta Release Goes Here ---
 
 
@@ -99,10 +99,22 @@ Toggle between MIDI-Catch modes - Shift-O and Shift-P
 MIDI channel +1 - '
 MIDI channel -1 - ;
 
-MIDI velocity +1 - =
-MIDI velocity -1 - -
-MIDI velocity +10 - +
-MIDI velocity -10 - _
+Default MIDI velocity +1 - =
+Default MIDI velocity -1 - -
+Default MIDI velocity +10 - +
+Default MIDI velocity -10 - _
+
+Shift active note-byte down by default velocity value - Shift-A
+Shift active note-byte up by default velocity value - Shift-S
+
+Shift all note-bytes in phrase down by default velocity value - Shift-D
+Shift all note-bytes in phrase up by default velocity value - Shift-F
+
+Shift active velocity byte down by default velocity value - Shift-Z
+Shift active velocity byte up by default velocity value - Shift-X
+
+Shift all velocity-bytes in phrase down by default velocity value - Shift-C
+Shift all velocity-bytes in phrase up by default velocity value - Shift-V
 
 Octave +1 - ]
 Octave -1 - [

@@ -1404,6 +1404,96 @@ function Phrases:in_1_list(list)
 			
 		end
 	
+	elseif cmd:sub(1, 15) == "SHIFT_ALL_NOTES" then -- Shift the phrase's notes up or down by 1 space
+	
+		if self.recording == true then
+		
+			local shiftval = 0
+			if cmd == "SHIFT_ALL_NOTES_DOWN" then
+				shiftval = self.velocity * -1
+			elseif cmd == "SHIFT_ALL_NOTES_UP" then
+				shiftval = self.velocity
+			end
+		
+			for i = 1, #self.phrase[self.key].notes do
+				if rangeCheck(self.phrase[self.key].notes[i][1], 128, 159) then
+					if self.phrase[self.key].notes[i][2] ~= nil then
+						self.phrase[self.key].notes[i][2] = (self.phrase[self.key].notes[i][2] + shiftval) % 128
+					end
+				end
+			end
+		
+			pd.post("Shifted all note bytes in phrase " .. self.key .. " by " .. shiftval .. " steps")
+			
+			self:updateEditorGUI()
+			
+		end
+	
+	elseif cmd:sub(1, 18) == "SHIFT_ALL_VELOCITY" then -- Shift the phrase's notes up or down by 1 space
+	
+		if self.recording == true then
+		
+			local shiftval = 0
+			if cmd == "SHIFT_ALL_VELOCITY_DOWN" then
+				shiftval = self.velocity * -1
+			elseif cmd == "SHIFT_ALL_VELOCITY_UP" then
+				shiftval = self.velocity
+			end
+		
+			for i = 1, #self.phrase[self.key].notes do
+				if rangeCheck(self.phrase[self.key].notes[i][1], 128, 159) then
+					if self.phrase[self.key].notes[i][3] ~= nil then
+						self.phrase[self.key].notes[i][3] = (self.phrase[self.key].notes[i][3] + shiftval) % 128
+					end
+				end
+			end
+		
+			pd.post("Shifted all velocity bytes in phrase " .. self.key .. " by " .. shiftval .. " steps")
+			
+			self:updateEditorGUI()
+			
+		end
+	
+	elseif cmd:sub(1, 10) == "SHIFT_NOTE" then -- Shift the note byte at the pointer up or down by 1 or 12 spaces
+	
+		if self.recording == true then
+		
+			local shiftval = 0
+			if cmd == "SHIFT_NOTE_DOWN" then
+				shiftval = self.velocity * -1
+			elseif cmd == "SHIFT_NOTE_UP" then
+				shiftval = self.velocity
+			end
+		
+			if self.phrase[self.key].notes[self.pointer][2] ~= nil then
+				self.phrase[self.key].notes[self.pointer][2] = (self.phrase[self.key].notes[self.pointer][2] + shiftval) % 128
+				pd.post("Shifted byte 2 of note " .. self.pointer .. " in phrase " .. self.key .. " to value " .. self.phrase[self.key].notes[self.pointer][2])
+			end
+		
+			self:updateEditorGUI()
+			
+		end
+	
+	elseif (cmd:sub(1, 14) == "SHIFT_VELOCITY") then -- Shift the velocity byte at the pointer up or down by 1 or 10 spaces
+	
+		if self.recording == true then
+		
+			local shiftval = 0
+			if cmd == "SHIFT_VELOCITY_DOWN" then
+				shiftval = self.velocity * -1
+			elseif cmd == "SHIFT_VELOCITY_UP" then
+				shiftval = self.velocity
+			end
+		
+			if self.phrase[self.key].notes[self.pointer][3] ~= nil then
+				self.phrase[self.key].notes[self.pointer][3] = (self.phrase[self.key].notes[self.pointer][3] + shiftval) % 128
+				pd.post("Shifted byte 3 of note " .. self.pointer .. " in phrase " .. self.key .. " to value " .. self.phrase[self.key].notes[self.pointer][3])
+			end
+			
+			self:updateEditorGUI()
+			
+		end
+	
 	elseif cmd == "INPUT_MODE_TOGGLE" then -- Toggle between input modes
 	
 		for k, v in ipairs(modenames) do
