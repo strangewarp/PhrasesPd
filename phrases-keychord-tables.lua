@@ -237,12 +237,32 @@ return {
 		".",
 	},
 	
-	SHIFT_NOTE_DOWN = {
+	MOVE_NOTE_BACK = {
+		"Shift",
+		"Q",
+	},
+	
+	MOVE_NOTE_FORWARD = {
+		"Shift",
+		"W",
+	},
+	
+	MOVE_ALL_NOTES_BACK = {
+		"Shift",
+		"E",
+	},
+	
+	MOVE_ALL_NOTES_FORWARD = {
+		"Shift",
+		"R",
+	},
+	
+	SHIFT_PITCH_DOWN = {
 		"Shift",
 		"A",
 	},
 	
-	SHIFT_NOTE_UP = {
+	SHIFT_PITCH_UP = {
 		"Shift",
 		"S",
 	},
@@ -257,12 +277,12 @@ return {
 		"X",
 	},
 	
-	SHIFT_ALL_NOTES_DOWN = {
+	SHIFT_ALL_PITCHES_DOWN = {
 		"Shift",
 		"D",
 	},
 	
-	SHIFT_ALL_NOTES_UP = {
+	SHIFT_ALL_PITCHES_UP = {
 		"Shift",
 		"F",
 	},

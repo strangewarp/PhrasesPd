@@ -104,6 +104,11 @@ Default MIDI velocity -1 - -
 Default MIDI velocity +10 - +
 Default MIDI velocity -10 - _
 
+Move active note back by default velocity value - Shift-Q
+Move active note forward by default velocity value - Shift-W
+Move all notes in active phrase back by default velocity value - Shift-E
+Move all notes in active phrase forward by default velocity value - Shift-R
+
 Shift active note-byte down by default velocity value - Shift-A
 Shift active note-byte up by default velocity value - Shift-S
 

@@ -1404,14 +1404,92 @@ function Phrases:in_1_list(list)
 			
 		end
 	
-	elseif cmd:sub(1, 15) == "SHIFT_ALL_NOTES" then -- Shift the phrase's notes up or down by 1 space
+	elseif cmd == "MOVE_ALL_NOTES_BACK" then -- Shift all notes in a phrase backwards
+	
+		if self.recording == true then
+		
+			local shiftamt = math.max(1, self.velocity)
+		
+			for i = 1, shiftamt do
+				local tempnote = table.remove(self.phrase[self.key].notes, 1)
+				table.insert(self.phrase[self.key].notes, tempnote)
+			end
+			
+			self.pointer = (((self.pointer - shiftamt) - 1) % #self.phrase[self.key].notes) + 1
+			
+			-- Update the active phrase's display-value hash
+			self.phrase[self.key].dhash = makeDisplayValHash(self.phrase[self.key].notes)
+				
+			self:updateEditorGUI()
+			
+		end
+	
+	elseif cmd == "MOVE_ALL_NOTES_FORWARD" then -- Shift all notes in a phrase forwards
+	
+		if self.recording == true then
+		
+			local shiftamt = math.max(1, self.velocity)
+		
+			for i = 1, shiftamt do
+				local tempnote = table.remove(self.phrase[self.key].notes, #self.phrase[self.key].notes)
+				table.insert(self.phrase[self.key].notes, 1, tempnote)
+			end
+			
+			self.pointer = (((self.pointer + shiftamt) - 1) % #self.phrase[self.key].notes) + 1
+			
+			-- Update the active phrase's display-value hash
+			self.phrase[self.key].dhash = makeDisplayValHash(self.phrase[self.key].notes)
+				
+			self:updateEditorGUI()
+			
+		end
+	
+	elseif cmd:sub(1, 9) == "MOVE_NOTE" then -- Move a note backwards or forwards
 	
 		if self.recording == true then
 		
 			local shiftval = 0
-			if cmd == "SHIFT_ALL_NOTES_DOWN" then
+			local iterval = 0
+			if cmd == "MOVE_NOTE_BACK" then
 				shiftval = self.velocity * -1
-			elseif cmd == "SHIFT_ALL_NOTES_UP" then
+				iterval = -1
+			elseif cmd == "MOVE_NOTE_FORWARD" then
+				shiftval = self.velocity
+				iterval = 1
+			end
+			
+			-- Wrap the velocity value within the phrase's size
+			local insertpoint = (((self.pointer + shiftval) - 1) % #self.phrase[self.key].notes) + 1
+			
+			-- Move the note one space at a time, in the prescribed direction, until it reaches the destination point.
+			-- self.pointer is moved along with the note, which conveniently allows the user to keep track of positioning.
+			while self.pointer ~= insertpoint do
+			
+				-- Wrap the adjacent location within the phrase's size
+				local adjpoint = (((self.pointer + iterval) - 1) % #self.phrase[self.key].notes) + 1
+			
+				-- Switch current note with adjacent note
+				self.phrase[self.key].notes[self.pointer], self.phrase[self.key].notes[adjpoint] = self.phrase[self.key].notes[adjpoint], self.phrase[self.key].notes[self.pointer]
+				
+				self.pointer = adjpoint -- Set pointer to the adjacent location
+				
+			end
+			
+			-- Update the active phrase's display-value hash
+			self.phrase[self.key].dhash = makeDisplayValHash(self.phrase[self.key].notes)
+			
+			self:updateEditorGUI()
+			
+		end
+	
+	elseif cmd:sub(1, 17) == "SHIFT_ALL_PITCHES" then -- Shift the phrase's notes up or down by 1 space
+	
+		if self.recording == true then
+		
+			local shiftval = 0
+			if cmd == "SHIFT_ALL_PITCHES_DOWN" then
+				shiftval = self.velocity * -1
+			elseif cmd == "SHIFT_ALL_PITCHES_UP" then
 				shiftval = self.velocity
 			end
 		
@@ -1454,14 +1532,14 @@ function Phrases:in_1_list(list)
 			
 		end
 	
-	elseif cmd:sub(1, 10) == "SHIFT_NOTE" then -- Shift the note byte at the pointer up or down by 1 or 12 spaces
+	elseif cmd:sub(1, 11) == "SHIFT_PITCH" then -- Shift the note byte at the pointer up or down by 1 or 12 spaces
 	
 		if self.recording == true then
 		
 			local shiftval = 0
-			if cmd == "SHIFT_NOTE_DOWN" then
+			if cmd == "SHIFT_PITCH_DOWN" then
 				shiftval = self.velocity * -1
-			elseif cmd == "SHIFT_NOTE_UP" then
+			elseif cmd == "SHIFT_PITCH_UP" then
 				shiftval = self.velocity
 			end
 		
