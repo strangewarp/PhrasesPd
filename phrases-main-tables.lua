@@ -6,13 +6,10 @@ return {
 		"z", "s", "x", "d", "c", "v", "g", "b", "h", "n", "j", "m",
 		{",", "q"},
 		{"l", "2"},
-		"w",
-		"3",
-		"e",
-		"r", "5", "t", "6", "y", "7", "u", "i", "9", "o", "0", "p",
+		"w", "3", "e", "r", "5", "t", "6", "y", "7", "u", "i", "9", "o", "0", "p",
 	},
 
-	-- Build a hashmap of keyboard-keys and MIDI-offset values, for the computer-keyboard section of the editor
+	-- Build a hashmap of keyboard-keys and MIDI-offset values for the editor
 	kbhash = function(names)
 	
 		local hash = {}

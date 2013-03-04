@@ -35,6 +35,27 @@ end
 
 
 
+-- Recursively copy all sub-tables, when copying from one table to another. Form of: newtable = deepCopy(oldtable, {})
+local function deepCopy(t, t2)
+
+	for k, v in pairs(t) do
+	
+		if type(v) ~= "table" then
+			t2[k] = v
+		else
+			local temp = {}
+			deepCopy(v, temp)
+			t2[k] = temp
+		end
+		
+	end
+	
+	return t2
+	
+end
+
+
+
 -- Convert a numerical MIDI note value to a more human-readable note (e.g. C-3, D-4 etc). Note: The input is 0-indexed
 local function readableNote(f)
 
@@ -252,26 +273,37 @@ function Phrases:noteParse(k, note)
 
 		-- Modify sustain values, based on incoming note-on/note-offs
 		if command == 128 then
+		
 			self.midi[chan][pitch] = self.midi[chan][pitch] - self.phrase[k].midi[chan][pitch]
 			self.phrase[k].midi[chan][pitch] = 0
+			
+			-- Only send the noteoff command if the note's global sustain value is 0
+			if self.midi[chan][pitch] == 0 then
+				self:noteSend(k, note)
+			end
+			
 		elseif command == 144 then
-			self.midi[chan][pitch] = self.midi[chan][pitch] + 1
-			self.phrase[k].midi[chan][pitch] = self.phrase[k].midi[chan][pitch] + 1
-			self:noteSend(k, note) -- Send all note-ons
+		
+			if self.midi[chan][pitch] >= 1 then
+			
+				-- If the note is already playing, send a quick noteoff and noteon, leaving the internal values the same
+				self:noteSend(k, {128 + chan, note[2], note[3]})
+				self:noteSend(k, note)
+				
+				if self.phrase[k].midi[chan][pitch] == 0 then -- If the note is newly active in the phrase, track that locally and globally
+					self.phrase[k].midi[chan][pitch] = 1
+					self.midi[chan][pitch] = self.midi[chan][pitch] + 1
+				end
+				
+			else -- If the note isn't already playing, track it locally and globally, and send a noteon
+				self.midi[chan][pitch] = 1
+				self.phrase[k].midi[chan][pitch] = 1
+				self:noteSend(k, note)
+			end
+			
 		end
 		
-		-- Compensate for extraneous note-offs locally
-		if self.phrase[k].midi[chan][pitch] <= 0 then
-			self.phrase[k].midi[chan][pitch] = 0
-		end
-
-		-- Compensate for extraneous note-offs globally, and send a MIDI-OFF command if the global sustain is <=0
-		if self.midi[chan][pitch] <= 0 then
-			self.midi[chan][pitch] = 0
-			self:noteSend(k, note)
-		end
-		
-	else
+	else -- Send all commands that aren't NOTEON/NOTEOFFs
 		self:noteSend(k, note)
 	end
 	
@@ -283,7 +315,7 @@ function Phrases:haltPhraseMidi(p)
 	-- For every currently active note in the phrase, send a MIDI-OFF through noteParse()
 	for chan, v in pairs(self.phrase[p].midi) do
 		for pitch, num in pairs(v) do
-			for i = 1, num do
+			if num == 1 then
 				self:noteParse(p, {128 + chan, pitch, 127})
 			end
 		end
@@ -776,6 +808,69 @@ end
 
 
 
+-- Add the current phrase table to the history table
+function Phrases:addStateToHistory()
+
+	if self.undopoint < #self.history then
+		for i = #self.history, self.undopoint + 1, -1 do
+			table.remove(self.history, i)
+		end
+	end
+
+	if #self.history == 50 then
+		table.remove(self.history, 1)
+		self.history[#self.history + 1] = {deepCopy(self.phrase, {}), self.key, self.pointer}
+	else
+		self.history[#self.history + 1] = {deepCopy(self.phrase, {}), self.key, self.pointer}
+		self.undopoint = self.undopoint + 1
+	end
+
+end
+
+-- Erase all history and replace it with the current state
+function Phrases:replaceOldHistory()
+
+	self.history = {{deepCopy(self.phrase, {}), self.key, self.pointer}}
+	self.undopoint = 1
+
+end
+
+-- Undo: move backwards by one step through the history stack
+function Phrases:undo()
+
+	if self.undopoint > 1 then
+	
+		self.undopoint = self.undopoint - 1
+		
+		self.phrase = deepCopy(self.history[self.undopoint][1], {})
+		self.key = self.history[self.undopoint][2]
+		self.pointer = self.history[self.undopoint][3]
+		
+	end
+	
+	pd.post("Undo depth: " .. self.undopoint .. "/" .. #self.history)
+	
+end
+
+-- Redo: move forwards by one step through the history stack
+function Phrases:redo()
+
+	if self.undopoint < #self.history then
+	
+		self.undopoint = self.undopoint + 1
+		
+		self.phrase = deepCopy(self.history[self.undopoint][1], {})
+		self.key = self.history[self.undopoint][2]
+		self.pointer = self.history[self.undopoint][3]
+		
+	end
+
+	pd.post("Undo depth: " .. self.undopoint .. "/" .. #self.history)
+
+end
+
+
+
 function Phrases:setDefaultNotes(p)
 
 	if self.phrase[p] == nil then
@@ -888,7 +983,7 @@ function Phrases:initialize(sel, atoms)
 	
 	self.adc = {} -- Table for a song's ADC values
 	
-	self.matrix = makeTrMatrix(self.gridx, self.gridy) -- Matrix to link keys to other keys, for transference use
+	self.matrix = makeTrMatrix(self.gridx, self.gridy) -- Matrix to link keys to other keys, for transference purposes
 	
 	self.queue = {} -- Table for holding all incoming button presses; it is emptied out on every gate-tick
 	self.trqueue = {} -- Table for holding all ongoing transference; it is filled and flushed during every tick
@@ -910,6 +1005,9 @@ function Phrases:initialize(sel, atoms)
 	self.inputmode = "note" -- Set to either 'note' or 'tr', depending on which input mode is active
 	
 	self.midicatch = "all" -- Changes which sort of MIDI input is accepted
+	
+	self.history = {{self.phrase, self.key, self.pointer}} -- Table for holding previous states of the editor, for undo/redo purposes
+	self.undopoint = 1 -- Tracks the current undo location in the history table
 	
 	return true
 	
@@ -974,7 +1072,18 @@ function Phrases:in_1_list(list)
 					self.phrase[self.key].transfer[10] = (self.phrase[self.key].transfer[10] + 1) % 2
 					pd.post("Phrase " .. self.key .. ": Persistence set to " .. self.phrase[self.key].transfer[10])
 				end
-			
+		
+				-- Update the relevant transference sub-button in the grid GUI
+				local xtr, ytr = keyToCoords(self.key, self.gridx, self.gridy, 1, 0)
+				local trbut = ytr .. "-" .. xtr .. "-grid-"
+				if rangeCheck(self.channel, 1, 9) then
+					if putnote > 0 then
+						self:outlet(5, "list", rgbOutList(trbut .. "sub-" .. self.channel, self.color[8][3], self.color[8][3]))
+					else
+						self:outlet(5, "list", rgbOutList(trbut .. "sub-" .. self.channel, self.color[8][2], self.color[8][2]))
+					end
+				end
+	
 			end
 			
 			-- If a new command was inserted, increase note pointer, and prevent overshooting the limit of the note array
@@ -989,6 +1098,8 @@ function Phrases:in_1_list(list)
 					self.pointer = 1
 				end
 			end
+			
+			self:addStateToHistory()
 
 			self:updateEditorGUI()
 			
@@ -1078,6 +1189,9 @@ function Phrases:in_1_list(list)
 			-- Reset the editor's key and pointer, to prevent out-of-bounds errors
 			self.key = 1
 			self.pointer = 1
+			
+			-- Remove the previous file's information from the old history table, and replace it with the new file's initial state
+			self:replaceOldHistory()
 			
 			-- Send updated global BPM/TPB/GATE information to the program's Pd side
 			pd.send("phrases-bpm", "float", {self.bpm})
@@ -1182,6 +1296,54 @@ function Phrases:in_1_list(list)
 		
 		pd.post("Data saved to " .. self.filepath .. self.savename)
 		
+	elseif cmd == "UNDO" then -- Undo most recent phrase-changing command, by moving back one space in the history table
+	
+		if self.recording == true then
+		
+			-- Convert the pointer from the active note to its corresponding tick
+			local oldp = self.phrase[self.key].dhash[self.pointer]
+		
+			self:undo()
+			
+			-- Set the pointer to 1, in case there is no match
+			self.pointer = 1
+			
+			-- Check the pointer against the new sequence's key-hash, to preserve numbering
+			for k, v in ipairs(self.phrase[self.key].dhash) do
+				if v == oldp then
+					self.pointer = k
+					do break end
+				end
+			end
+			
+			self:updateEditorGUI()
+		
+		end
+	
+	elseif cmd == "REDO" then -- Redo next-most-recent phrase-changing command, by moving forward one space in the history table
+	
+		if self.recording == true then
+		
+			-- Convert the pointer from the active note to its corresponding tick
+			local oldp = self.phrase[self.key].dhash[self.pointer]
+		
+			self:redo()
+			
+			-- Set the pointer to 1, in case there is no match
+			self.pointer = 1
+			
+			-- Check the pointer against the new sequence's key-hash, to preserve numbering
+			for k, v in ipairs(self.phrase[self.key].dhash) do
+				if v == oldp then
+					self.pointer = k
+					do break end
+				end
+			end
+			
+			self:updateEditorGUI()
+		
+		end
+	
 	elseif (cmd == "NOTE_NEXT") -- Advance the note pointer
 	or (cmd == "NOTE_PREV") -- Retreat the note pointer
 	then
@@ -1377,6 +1539,8 @@ function Phrases:in_1_list(list)
 				-- Update the active phrase's display-value hash
 				self.phrase[self.key].dhash = makeDisplayValHash(self.phrase[self.key].notes)
 				
+				self:addStateToHistory()
+
 				self:updateEditorGUI()
 				
 			else
@@ -1400,6 +1564,8 @@ function Phrases:in_1_list(list)
 			-- Update the active phrase's display-value hash
 			self.phrase[self.key].dhash = makeDisplayValHash(self.phrase[self.key].notes)
 				
+			self:addStateToHistory()
+
 			self:updateEditorGUI()
 			
 		end
@@ -1419,7 +1585,9 @@ function Phrases:in_1_list(list)
 			
 			-- Update the active phrase's display-value hash
 			self.phrase[self.key].dhash = makeDisplayValHash(self.phrase[self.key].notes)
-				
+			
+			self:addStateToHistory()
+
 			self:updateEditorGUI()
 			
 		end
@@ -1439,7 +1607,9 @@ function Phrases:in_1_list(list)
 			
 			-- Update the active phrase's display-value hash
 			self.phrase[self.key].dhash = makeDisplayValHash(self.phrase[self.key].notes)
-				
+			
+			self:addStateToHistory()
+
 			self:updateEditorGUI()
 			
 		end
@@ -1478,6 +1648,8 @@ function Phrases:in_1_list(list)
 			-- Update the active phrase's display-value hash
 			self.phrase[self.key].dhash = makeDisplayValHash(self.phrase[self.key].notes)
 			
+			self:addStateToHistory()
+
 			self:updateEditorGUI()
 			
 		end
@@ -1503,6 +1675,8 @@ function Phrases:in_1_list(list)
 		
 			pd.post("Shifted all note bytes in phrase " .. self.key .. " by " .. shiftval .. " steps")
 			
+			self:addStateToHistory()
+
 			self:updateEditorGUI()
 			
 		end
@@ -1528,6 +1702,8 @@ function Phrases:in_1_list(list)
 		
 			pd.post("Shifted all velocity bytes in phrase " .. self.key .. " by " .. shiftval .. " steps")
 			
+			self:addStateToHistory()
+
 			self:updateEditorGUI()
 			
 		end
@@ -1548,6 +1724,8 @@ function Phrases:in_1_list(list)
 				pd.post("Shifted byte 2 of note " .. self.pointer .. " in phrase " .. self.key .. " to value " .. self.phrase[self.key].notes[self.pointer][2])
 			end
 		
+			self:addStateToHistory()
+
 			self:updateEditorGUI()
 			
 		end
@@ -1568,6 +1746,8 @@ function Phrases:in_1_list(list)
 				pd.post("Shifted byte 3 of note " .. self.pointer .. " in phrase " .. self.key .. " to value " .. self.phrase[self.key].notes[self.pointer][3])
 			end
 			
+			self:addStateToHistory()
+
 			self:updateEditorGUI()
 			
 		end
@@ -1619,6 +1799,166 @@ function Phrases:in_1_list(list)
 		
 		self:updateEditorGUI()
 	
+	elseif cmd == "ADD_NOTE_OFFS_AUTO" then -- Place correctly formatted note-offs before each note in the phrase
+		
+		-- Note: This command will only insert noteoffs properly for monophonic phrases.
+		
+		if self.recording == true then
+		
+			-- Convert the pointer from the active note to its corresponding tick
+			local oldp = self.phrase[self.key].dhash[self.pointer]
+			
+			local tempnotes = self.phrase[self.key].notes
+			
+			local i = 1
+			while i <= #tempnotes do -- Use a while loop instead of a for loop, because for doesn't track changes that happen to the limiting value of #tempnotes
+			
+				local note = tempnotes[i]
+			
+				if rangeCheck(note[1], 144, 159) then
+				
+					local space = 0
+					local cycle = 0
+					local inpoint = i
+					
+					while
+					(
+						(not(rangeCheck(tempnotes[inpoint][1], 144, 159)))
+						or (space == 0)
+					)
+					and (cycle <= #tempnotes)
+					do
+					
+						if tempnotes[inpoint][1] == -1 then
+							space = space + 1
+						end
+						
+						if inpoint >= #tempnotes then
+							inpoint = 0
+							i = i + 1
+						end
+						
+						inpoint = inpoint + 1
+						cycle = cycle + 1
+						
+					end
+				
+					table.insert(tempnotes, inpoint, {note[1] - 16, note[2], note[3]})
+					
+					pd.post("Added noteoff: position " .. inpoint .. ", note " .. (note[1] - 16) .. " " .. note[2] .. " " .. note[3])
+
+				end
+				
+				i = i + 1
+				
+			end
+			
+			self.phrase[self.key].notes = tempnotes
+			
+			-- Update the active phrase's display-value hash
+			self.phrase[self.key].dhash = makeDisplayValHash(self.phrase[self.key].notes)
+			
+			-- Check the pointer against the new sequence's key-hash, to preserve numbering
+			for k, v in ipairs(self.phrase[self.key].dhash) do
+				if v == oldp then
+					self.pointer = k
+					do break end
+				end
+			end
+
+			self:addStateToHistory()
+			
+			self:updateEditorGUI()
+			
+		end
+		
+	elseif cmd == "ADD_NOTE_OFFS_SPACING" then -- Place correctly formatted note-offs at a distance specified by the current spacing value
+		
+		if self.recording == true then
+		
+			if self.spacing > 0 then
+		
+				-- Convert the pointer from the active note to its corresponding tick
+				local oldp = self.phrase[self.key].dhash[self.pointer]
+				
+				local tempnotes = self.phrase[self.key].notes
+				
+				local i = 1
+				while i <= #tempnotes do -- Use a while loop instead of a for loop, because for doesn't track changes that happen to the limiting value of #tempnotes
+				
+					local note = tempnotes[i]
+					
+					if rangeCheck(note[1], 144, 159) then
+					
+						local spaces = 0
+						local inpoint = (i % #tempnotes) + 1
+						
+						-- Increase the insert-point until it reaches the number of halting notes specified by self.spacing
+						while spaces < self.spacing do
+						
+							if tempnotes[inpoint][1] == -1 then
+								spaces = spaces + 1
+							end
+							
+							if (inpoint + 1) > #tempnotes then
+								inpoint = 1
+							else
+								inpoint = inpoint + 1
+							end
+
+						end
+						
+						-- Decrease the insert-point until it precedes all the tick's noteons.
+						-- If there are no halting notes in the phrase due to user error, searching is cut short after a full cycle.
+						local prevpoint = inpoint
+						local cycle = 0
+						repeat
+							inpoint = prevpoint
+							prevpoint = prevpoint - 1
+							if prevpoint == 0 then
+								prevpoint = #tempnotes
+							end
+							cycle = cycle + 1
+						until
+						(not(rangeCheck(tempnotes[prevpoint][1], 144, 159)))
+						or (cycle == #tempnotes)
+					
+						table.insert(tempnotes, inpoint, {note[1] - 16, note[2], note[3]})
+						i = i + 1 -- Increment i an extra time, to avoid being stuck on the noteon whose noteoff was just added
+						
+						pd.post("Added noteoff: position " .. inpoint .. ", note " .. (note[1] - 16) .. " " .. note[2] .. " " .. note[3])
+					
+					end
+				
+					i = i + 1
+				
+				end
+				
+				self.phrase[self.key].notes = tempnotes
+				
+				-- Update the active phrase's display-value hash
+				self.phrase[self.key].dhash = makeDisplayValHash(self.phrase[self.key].notes)
+				
+				-- Check the pointer against the new sequence's key-hash, to preserve numbering
+				for k, v in ipairs(self.phrase[self.key].dhash) do
+					if v == oldp then
+						self.pointer = k
+						do break end
+					end
+				end
+
+				self:addStateToHistory()
+
+				self:updateEditorGUI()
+				
+			else
+			
+				pd.post("Spacing must be greater than 0 for this command to work!")
+			
+			end
+			
+		end
+		
 	elseif cmd == "UPDATE_EDITOR_GUI" then -- Trigger an update in the editor GUI window
 	
 		self:updateEditorGUI()
@@ -1626,7 +1966,7 @@ function Phrases:in_1_list(list)
 	elseif cmd == "SETUP_GRID_GUI" then -- Setup colors in the grid GUI window that would otherwise go unset
 	
 		self:setupGridGUI()
-	
+		
 	end
 
 end
@@ -1904,13 +2244,6 @@ function Phrases:in_6_bang()
 		
 			-- Since the phrase was just activated, calculate a new transference direction, and send its info to the GUI
 			self.phrase[v].tdir = calcTransference(self.phrase[v].transfer)
-			--for i = 1, 9 do
-			--	if self.phrase[v].tdir == i then
-			--		self:outlet(5, "list", rgbOutList(outbutton .. "sub-" .. i, self.color[7][3], self.color[7][3]))
-			--	elseif self.phrase[v].transfer[i] > 0 then
-			--		self:outlet(5, "list", rgbOutList(outbutton .. "sub-" .. i, self.color[7][2], self.color[7][2]))
-			--	end
-			--end
 		
 			-- Send a message to the Monome button updater
 			self:outlet(3, "list", {outx, outy, 1})

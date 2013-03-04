@@ -18,17 +18,14 @@ Song data is saved as Lua table files, in a manner that is both executable and d
 
 
 Dependencies:
-Puredata-extended 0.43-1 beta
+Puredata-extended 0.43.4
 
 
 
 TO-DO LIST (in rough order of desired implementation):
 
-* Compatibility: Ensure that PhrasesPd is compatible with the final version of Pd-extended 0.43, once Pd-extended 0.43 is out of beta.
-* Debugging: Figure out what's causing lag spikes on weak computers when a phrase with multiple dangling sustains is deactivated. (This can be alleviated by dilligent use of closing NOTE-OFF commands for every NOTE-ON)
-* Add feature: ADC capabilities, plus editor panel.
-* Add feature: MIDI-CLOCK capabilities.
-* Refactoring: Shunt as many functions as possible into Lua table files, and require said files into the relevant pdlua objects.
+* Refactoring: Replace nooby table-copy mechanisms with the more robust deepCopy function
+* Add feature: ADC note-shifting capabilities, plus editor panel
 * --- Beta Release Goes Here ---
 
 
@@ -52,11 +49,11 @@ phrases-prefs.lua
 phrasespd.pd
 The directory itself can be wherever, but preferably somewhere convenient in your directory structure, as your savefiles will be loaded from within the same directory (or a subdirectory, if you specify so).
 
-3. Change the settings to reflect your setup and directory structure, by modifying the contents of "phrases-prefs.lua".
+3. Modify the contents of "phrases-prefs.lua" to reflect your setup and directory structure.
 
-4. Run "phrasespd.pd" in PureData.
+4. Change the Puredata MIDI settings to reflect your default MIDI-IN and MIDI-OUT devices.
 
-5. Change the Puredata MIDI settings to reflect your default MIDI-IN and MIDI-OUT devices. Remember: This must be done every time Puredata is newly opened.
+5. Run "phrasespd.pd" in PureData.
 
 6. You can now begin assembling phrases of MIDI data in the PhrasesPd editor, and playing them with your Monome.
 
@@ -66,13 +63,13 @@ The directory itself can be wherever, but preferably somewhere convenient in you
 
 
 
-Editor Commands (default keystrokes)
+Editor Commands (default keystrokes):
 
 Choose savefile name - Enter a custom savefile name in the main phrasespd.pd window
 Save file - Shift-?-|
 
 Choose loadfile name - Shift-[number], Shift-BackSpace-[number], or enter a custom loadfile name in the main phrasespd.pd window
-Load file - Shift-Backspace-Enter (WARNING: Erases any unsaved changes)
+Load file - Shift-Tab-Enter (WARNING: Erases any unsaved changes)
 
 Toggle Recording/Play modes - Esc
 
@@ -87,6 +84,9 @@ Insert note - zsxdcvgbhnjm,lq2w3er5t6y7ui9o0p
 
 Delete note - Delete
 Insert blank note - Backspace
+
+Undo - Shift-Tab-Z
+Redo - Shift-Tab-Y
 
 Previous phrase - Left arrow
 Next phrase - Right arrow
@@ -120,6 +120,9 @@ Shift active velocity byte up by default velocity value - Shift-X
 
 Shift all velocity-bytes in phrase down by default velocity value - Shift-C
 Shift all velocity-bytes in phrase up by default velocity value - Shift-V
+
+Add note-offs to active phrase - Shift-Tab-A
+Add note-offs to active phrase based on spacing value - Shift-Tab-S
 
 Octave +1 - ]
 Octave -1 - [

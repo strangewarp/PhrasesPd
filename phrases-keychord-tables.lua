@@ -113,7 +113,7 @@ return {
 	
 	LOAD = {
 		"Shift",
-		"BackSpace",
+		"Tab",
 		"Return",
 	},
 	
@@ -125,6 +125,18 @@ return {
 	
 	RECORD = {
 		"Escape",
+	},
+	
+	UNDO = {
+		"Shift",
+		"Tab",
+		"Z",
+	},
+	
+	REDO = {
+		"Shift",
+		"Tab",
+		"Y",
 	},
 	
 	MIDI_CATCHTYPE_BACK = {
@@ -295,6 +307,18 @@ return {
 	SHIFT_ALL_VELOCITY_UP = {
 		"Shift",
 		"V",
+	},
+	
+	ADD_NOTE_OFFS_AUTO = {
+		"Shift",
+		"Tab",
+		"A",
+	},
+	
+	ADD_NOTE_OFFS_SPACING = {
+		"Shift",
+		"Tab",
+		"S",
 	},
 	
 }

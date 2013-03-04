@@ -43,7 +43,7 @@ function KeyParser:in_1_list(cmd)
 		
 	end
 
-	if cmd[1] == 1 then -- On down-keystrokes, put the keypress into the keysdown table, compute commands, send out its symbol
+	if cmd[1] == 1 then -- On down-keystrokes, put the keypress into the keysdown table, compute commands, and send out its symbol
 	
 		self.keysdown[cmd[2]] = cmd[2]
 		
@@ -71,10 +71,28 @@ function KeyParser:in_1_list(cmd)
 				end
 			end
 			
-			-- If and only if the two tables are identical, send the command and empty the keysdown table
+			-- If the two tables are identical, send the command and empty all non-modifier keys from the keysdown table
 			if sendflag == true then
+			
 				self:outlet(1, "symbol", {k})
-				self.keysdown = {}
+				
+				local temptab = self.keysdown
+			
+				for k, v in pairs(self.keysdown) do
+				
+					if
+					(k ~= "Shift")
+					and (k ~= "Ctrl")
+					and (k ~= "Alt")
+					and (k ~= "Tab")
+					then
+						temptab[k] = nil
+					end
+					
+				end
+				
+				self.keysdown = temptab
+				
 			end
 		
 		end
