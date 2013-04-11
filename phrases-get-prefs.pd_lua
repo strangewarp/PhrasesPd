@@ -27,44 +27,39 @@ function GetPrefs:in_1_bang()
 	
 	-- Send user-prefs to the relevant Pd receptors
 	
-	pd.post("User-defined savefile path: " .. self.prefs.dirs.savedir)
-	
-	pd.send("phrases-save-path-in", "list", {self.prefs.dirs.savedir})
-	
-	pd.post("User-defined Monome size: Width " .. self.prefs.monome.width .. ", Height " .. self.prefs.monome.height)
-	
-	pd.send("phrases-monome-x", "float", {self.prefs.monome.width})
-	pd.send("phrases-monome-y", "float", {self.prefs.monome.height})
-	
-	pd.post("User-defined OSC ports: Listen " .. self.prefs.monome.osclisten .. ", Send " .. self.prefs.monome.oscsend)
-	if self.prefs.monome.osctype == 0 then
-		pd.post("Serial protocol: MonomeSerial")
-	else
-		pd.post("Serial protocol: serialosc")
-	end
-	
-	pd.send("phrases-osc-serial-type", "float", {self.prefs.monome.osctype})
-	pd.send("phrases-osc-in-port", "float", {self.prefs.monome.osclisten})
-	pd.send("phrases-osc-out-port", "float", {self.prefs.monome.oscsend})
-	
-	pd.post("User-defined grid GUI: X-pixels " .. self.prefs.gui.grid.xpixels .. ", Y-pixels " .. self.prefs.gui.grid.ypixels)
-	pd.post("User-defined grid GUI: X-margin " .. self.prefs.gui.grid.xmargin .. ", Y-margin " .. self.prefs.gui.grid.ymargin)
-	
-	pd.send("phrases-grid-pixelsx", "float", {self.prefs.gui.grid.xpixels})
-	pd.send("phrases-grid-pixelsy", "float", {self.prefs.gui.grid.ypixels})
-	pd.send("phrases-grid-marginx", "float", {self.prefs.gui.grid.xmargin})
-	pd.send("phrases-grid-marginy", "float", {self.prefs.gui.grid.ymargin})
-	
-	pd.post("User-defined editor GUI: X-cells " .. self.prefs.gui.editor.columns .. ", Y-cells " .. self.prefs.gui.editor.rows)
-	pd.post("User-defined editor GUI: X-pixels " .. self.prefs.gui.editor.xpixels .. ", Y-pixels " .. self.prefs.gui.editor.ypixels)
-	pd.post("User-defined editor GUI: X-margin " .. self.prefs.gui.editor.xmargin .. ", Y-margin " .. self.prefs.gui.editor.ymargin)
-	
-	pd.send("phrases-editor-cellsx", "float", {self.prefs.gui.editor.columns})
-	pd.send("phrases-editor-cellsy", "float", {self.prefs.gui.editor.rows})
-	pd.send("phrases-editor-pixelsx", "float", {self.prefs.gui.editor.xpixels})
-	pd.send("phrases-editor-pixelsy", "float", {self.prefs.gui.editor.ypixels})
-	pd.send("phrases-editor-marginx", "float", {self.prefs.gui.editor.xmargin})
-	pd.send("phrases-editor-marginy", "float", {self.prefs.gui.editor.ymargin})
+	pd.send(
+		"phrases-prefs-in",
+		"list",
+		{
+		
+			self.prefs.monome.width,
+			self.prefs.monome.height,
+			self.prefs.monome.adcnum,
+			self.prefs.monome.osctype,
+			self.prefs.monome.osclisten,
+			self.prefs.monome.oscsend,
+			
+			self.prefs.gui.grid.xpixels,
+			self.prefs.gui.grid.ypixels,
+			self.prefs.gui.grid.xmargin,
+			self.prefs.gui.grid.ymargin,
+			
+			self.prefs.gui.adc.xpixels,
+			self.prefs.gui.adc.ypixels,
+			self.prefs.gui.adc.xmargin,
+			self.prefs.gui.adc.ymargin,
+			
+			self.prefs.gui.editor.columns,
+			self.prefs.gui.editor.rows,
+			self.prefs.gui.editor.xpixels,
+			self.prefs.gui.editor.ypixels,
+			self.prefs.gui.editor.xmargin,
+			self.prefs.gui.editor.ymargin,
+			
+			self.prefs.dirs.savedir, -- Savedir must be listed last, due to later use of table.concat to clarify spaces in dirnames
+			
+		}
+	)
 	
 	for k, v in ipairs(self.prefs.gui.colors) do
 		table.insert(v, 1, k)

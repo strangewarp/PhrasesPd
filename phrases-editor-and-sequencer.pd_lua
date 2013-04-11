@@ -258,15 +258,26 @@ function Phrases:noteParse(k, note)
 	local chan = note[1] % 16
 	local command = note[1] - chan
 	local pitch = note[2]
+	local velo = note[3]
 	
 	if (command == 144)
 	or (command == 128)
 	then
+	
+		-- Set pitch and velocity to their ADC-shifted values, if applicable
+		if self.noteshift[chan][note[2]] ~= nil then
+			pitch = self.noteshift[chan][note[2]]
+		end
+		
+		if self.veloshift[chan][note[2]] ~= nil then
+			velo = self.veloshift[chan][note[2]]
+		end
 		
 		-- Create the parent tables if they don't exist
 		if self.midi[chan][pitch] == nil then
 			self.midi[chan][pitch] = 0
 		end
+		
 		if self.phrase[k].midi[chan][pitch] == nil then
 			self.phrase[k].midi[chan][pitch] = 0
 		end
@@ -279,16 +290,63 @@ function Phrases:noteParse(k, note)
 			
 			-- Only send the noteoff command if the note's global sustain value is 0
 			if self.midi[chan][pitch] == 0 then
-				self:noteSend(k, note)
+				self.noteshift[chan][pitch] = nil
+				self.veloshift[chan][pitch] = nil
+				self:noteSend(k, {note[1], pitch, velo})
 			end
 			
 		elseif command == 144 then
 		
+			local oldpitch = pitch
+			local oldvelo = velo
+			
+			-- Only shift note values before a noteon, so that they aren't changed inbetween a noteon and its corresponding noteoff
+			for k, v in ipairs(self.adc) do
+			
+				if v.channel == chan then
+				
+					local modval = v.magnitude * v.val
+					
+					if v.target == 2 then
+					
+						if v.style == "relative" then
+							pitch = math.min(127, math.max(0, math.floor(pitch + modval - (v.magnitude / 2))))
+						elseif v.style == "absolute" then
+							pitch = math.min(127, math.max(0, modval))
+						end
+						
+						self.noteshift[chan][note[2]] = pitch
+						
+					elseif v.target == 3 then
+					
+						if v.style == "relative" then
+							velo = math.min(127, math.max(1, math.floor(velo + modval - (v.magnitude / 2))))
+						elseif v.style == "absolute" then
+							velo = math.min(127, math.max(1, modval))
+						end
+						
+						self.veloshift[chan][note[2]] = velo
+						
+					end
+					
+				end
+				
+			end
+			
+			if oldpitch ~= pitch then
+				self.noteshift[chan][oldpitch] = nil
+			end
+			
+			if oldvelo ~= velo then
+				self.veloshift[chan][oldpitch] = nil
+			end
+			
 			if self.midi[chan][pitch] >= 1 then
 			
 				-- If the note is already playing, send a quick noteoff and noteon, leaving the internal values the same
-				self:noteSend(k, {128 + chan, note[2], note[3]})
-				self:noteSend(k, note)
+				-- Old note is terminated correctly, using values from before the most recent ADC value-shift
+				self:noteSend(k, {128 + chan, oldpitch, oldvelo})
+				self:noteSend(k, {note[1], pitch, velo})
 				
 				if self.phrase[k].midi[chan][pitch] == 0 then -- If the note is newly active in the phrase, track that locally and globally
 					self.phrase[k].midi[chan][pitch] = 1
@@ -298,7 +356,7 @@ function Phrases:noteParse(k, note)
 			else -- If the note isn't already playing, track it locally and globally, and send a noteon
 				self.midi[chan][pitch] = 1
 				self.phrase[k].midi[chan][pitch] = 1
-				self:noteSend(k, note)
+				self:noteSend(k, {note[1], pitch, velo})
 			end
 			
 		end
@@ -369,6 +427,57 @@ function Phrases:iterate(k)
 	
 	self.phrase[k].pointer = p
 	self.phrase[k].tick = tick
+	
+end
+
+
+
+-- Shift the volume value, transference strength, or ADC magnitude by a certain amount, depending on the input mode
+function Phrases:shiftVolumeVal(val)
+
+	if self.inputmode == "note" then
+	
+		self.velocity = (self.velocity + val) % 128
+		self:updateVelocityButton()
+		pd.post("MIDI Velocity set to " .. self.velocity)
+		
+	elseif self.inputmode == "tr" then
+	
+		if rangeCheck(self.trpoint, 1, 9) then
+			self.phrase[self.key].transfer[self.trpoint] = math.max(0, self.phrase[self.key].transfer[self.trpoint] + val)
+			pd.post("Phrase " .. self.key .. ": Set transference direction " .. self.channel .. " to strength " .. self.phrase[self.key].transfer[self.trpoint])
+		elseif self.trpoint == 10 then
+			self.phrase[self.key].transfer[10] = (self.phrase[self.key].transfer[10] + 1) % 2
+			pd.post("Phrase " .. self.key .. ": Persistence set to " .. self.phrase[self.key].transfer[10])
+		end
+
+		-- Update the relevant transference sub-button in the grid GUI
+		local xtr, ytr = keyToCoords(self.key, self.gridx, self.gridy, 1, 0)
+		local trbut = ytr .. "-" .. xtr .. "-grid-"
+		if rangeCheck(self.channel, 1, 9) then
+			if putnote > 0 then
+				self:outlet(5, "list", rgbOutList(trbut .. "sub-" .. self.channel, self.color[8][3], self.color[8][3]))
+			else
+				self:outlet(5, "list", rgbOutList(trbut .. "sub-" .. self.channel, self.color[8][2], self.color[8][2]))
+			end
+		end
+		
+		self:addStateToHistory()
+
+		self:updateEditorGUI()
+		
+	elseif (self.inputmode == "adc")
+	and (self.adc[self.adcpoint] ~= nil)
+	then
+	
+		self.adc[self.adcpoint].magnitude = (self.adc[self.adcpoint].magnitude + val) % 128
+		pd.post("ADC " .. self.adcpoint .. ": magnitude set to " .. self.adc[self.adcpoint].magnitude)
+		
+		self:addStateToHistory()
+
+		self:updateEditorGUI()
+		
+	end
 	
 end
 
@@ -451,27 +560,21 @@ function Phrases:updateNoteButton(cellx, celly, k, p) -- editor x pointer, edito
 	if self.inputmode == "tr" then -- Show the transference panel when transference mode is active
 	
 		local tr = self.phrase[notex].transfer
-		local nakedy = (celly - offsety) + 1
 		
-		if rangeCheck(nakedy, 1, 10) then
+		if rangeCheck(celly, 1, 10) then
 		
-			if (tr[nakedy] >= 1)
+			if (tr[celly] >= 1)
 			or (self.pitchview == false)
 			then
-				message = nakedy .. ". " .. tr[nakedy]
+				message = celly .. ". " .. tr[celly]
 			else
-				message = nakedy .. ". --"
+				message = celly .. ". --"
 			end
 			
 			mcvals = self.color[4][1]
 			
 			if cellx == offsetx then -- Set active phrase's transference values to the main user-defined color
-				if (nakedy == self.channel)
-				or (
-					(nakedy == 10)
-					and (self.channel >= 10)
-				)
-				then
+				if celly == self.trpoint then
 					cvals = self.color[1][1]
 				else
 					cvals = self.color[1][2]
@@ -487,7 +590,43 @@ function Phrases:updateNoteButton(cellx, celly, k, p) -- editor x pointer, edito
 		
 		bname = (celly - 1) .. "-" .. (cellx - 1) .. "-editor-button"
 		self:outlet(5, "list", {bname, cvals[1], cvals[2], cvals[3], mcvals[1], mcvals[2], mcvals[3]})
+		pd.send(bname, "label", {message})
+	
+	elseif self.inputmode == "adc" then
+	
+		cvals = self.color[3][2]
+		mcvals = self.color[3][1]
 		
+		if cellx == offsetx then
+		
+			mcvals = self.color[4][1]
+		
+			local curadc = math.floor((celly - 1) / 4) + 1
+			
+			if self.adc[curadc] ~= nil then
+			
+				if ((celly - 1) % 4) == 0 then
+					message = curadc .. ". Chan: " .. self.adc[curadc].channel
+				elseif ((celly - 1) % 4) == 1 then
+					message = curadc .. ". Target: " .. self.adc[curadc].target
+				elseif ((celly - 1) % 4) == 2 then
+					message = curadc .. ". Style: " .. self.adc[curadc].style
+				elseif ((celly - 1) % 4) == 3 then
+					message = curadc .. ". Magnitude: " .. self.adc[curadc].magnitude
+				end
+			
+				if curadc == self.adcpoint then
+					cvals = self.color[1][1]
+				else
+					cvals = self.color[2][2]
+				end
+			
+			end
+			
+		end
+		
+		bname = (celly - 1) .. "-" .. (cellx - 1) .. "-editor-button"
+		self:outlet(5, "list", {bname, cvals[1], cvals[2], cvals[3], mcvals[1], mcvals[2], mcvals[3]})
 		pd.send(bname, "label", {message})
 	
 	else -- Display colors normally when in other view modes
@@ -583,6 +722,8 @@ function Phrases:updateModeButton()
 		pd.send("phrases-editor-mode-button", "label", {"Mode: Note"})
 	elseif self.inputmode == "tr" then
 		pd.send("phrases-editor-mode-button", "label", {"Mode: Tr"})
+	elseif self.inputmode == "adc" then
+		pd.send("phrases-editor-mode-button", "label", {"Mode: ADC"})
 	end
 
 end
@@ -615,12 +756,25 @@ function Phrases:updateChannelButton()
 	local chbcolor = -1
 	local chbmessage = ""
 
-	if self.inputmode == "tr" then
-		chbcolor = self.color[1][1]
-		chbmessage = "Tr: " .. trnames[math.min(math.max(self.channel, 1), 10)]
-	else
+	if self.inputmode == "note" then
 		chbcolor = self.color[2][1]
 		chbmessage = "Chan " .. self.channel
+	elseif self.inputmode == "tr" then
+		chbcolor = self.color[1][1]
+		chbmessage = "Tr: "
+		if rangeCheck(self.trpoint, 1, 10) then
+			chbmessage = chbmessage .. trnames[self.trpoint]
+		else
+			chbmessage = chbmessage .. "N/A"
+		end
+	elseif self.inputmode == "adc" then
+		chbcolor = self.color[1][1]
+		chbmessage = "ADC: "
+		if self.adc[self.adcpoint] ~= nil then
+			chbmessage = chbmessage .. self.adcpoint
+		else
+			chbmessage = chbmessage .. "N/A"
+		end
 	end
 	
 	self:outlet(5, "list", rgbOutList("phrases-editor-channel-button", chbcolor, self.color[4][1]))
@@ -703,8 +857,10 @@ function Phrases:updateHotseatButtons()
 
 	local outcolor = nil
 	for k, v in pairs(self.hotseats) do
-		if v == self.loadname then
+		if k == self.hotseatnum then
 			outcolor = self.color[1][1]
+		elseif v == self.loadname then
+			outcolor = self.color[2][2]
 		else
 			outcolor = self.color[2][1]
 		end
@@ -768,6 +924,10 @@ function Phrases:setupGridGUI()
 	end
 	
 	self:outlet(5, "list", rgbOutList("phrases-grid-bg", self.color[8][1], self.color[8][1]))
+	
+	for i = 1, self.adcnum do
+		self:outlet(5, "list", rgbOutList(i .. "-adc-button", self.color[5][1], self.color[5][1]))
+	end
 
 end
 
@@ -819,18 +979,18 @@ function Phrases:addStateToHistory()
 
 	if #self.history == 50 then
 		table.remove(self.history, 1)
-		self.history[#self.history + 1] = {deepCopy(self.phrase, {}), self.key, self.pointer}
 	else
-		self.history[#self.history + 1] = {deepCopy(self.phrase, {}), self.key, self.pointer}
 		self.undopoint = self.undopoint + 1
 	end
 
+	self.history[#self.history + 1] = {deepCopy(self.phrase, {}), deepCopy(self.adc, {}), self.key, self.pointer}
+	
 end
 
 -- Erase all history and replace it with the current state
 function Phrases:replaceOldHistory()
 
-	self.history = {{deepCopy(self.phrase, {}), self.key, self.pointer}}
+	self.history = {{deepCopy(self.phrase, {}), deepCopy(self.adc, {}), self.key, self.pointer}}
 	self.undopoint = 1
 
 end
@@ -843,8 +1003,9 @@ function Phrases:undo()
 		self.undopoint = self.undopoint - 1
 		
 		self.phrase = deepCopy(self.history[self.undopoint][1], {})
-		self.key = self.history[self.undopoint][2]
-		self.pointer = self.history[self.undopoint][3]
+		self.adc = deepCopy(self.history[self.undopoint][2], {})
+		self.key = self.history[self.undopoint][3]
+		self.pointer = self.history[self.undopoint][4]
 		
 	end
 	
@@ -860,8 +1021,9 @@ function Phrases:redo()
 		self.undopoint = self.undopoint + 1
 		
 		self.phrase = deepCopy(self.history[self.undopoint][1], {})
-		self.key = self.history[self.undopoint][2]
-		self.pointer = self.history[self.undopoint][3]
+		self.adc = deepCopy(self.history[self.undopoint][2], {})
+		self.key = self.history[self.undopoint][3]
+		self.pointer = self.history[self.undopoint][4]
 		
 	end
 
@@ -918,16 +1080,12 @@ function Phrases:initialize(sel, atoms)
 	-- 6. Gate bangs
 	-- 7. Loadfile name
 	-- 8. Savefile name
-	-- 9. Savepath name
-	-- 10. Global BPM
-	-- 11. Global TPB
-	-- 12. Global GATE
-	-- 13. Grid X cells
-	-- 14. Grid Y cells
-	-- 15. Editor X cells
-	-- 16. Editor Y cells
-	-- 17. GUI color lists
-	self.inlets = 17
+	-- 9. Global BPM
+	-- 10. Global TPB
+	-- 11. Global GATE
+	-- 12. Preferences list
+	-- 13. GUI color lists
+	self.inlets = 13
 	
 	-- 1. Editor note-send out (to delayed note-off as well)
 	-- 2. Sequencer note-send out
@@ -939,6 +1097,9 @@ function Phrases:initialize(sel, atoms)
 	-- Default grid height and width
 	self.gridx = 8
 	self.gridy = 8
+	
+	-- Number of ADCs on the Monome
+	self.adcnum = 0
 	
 	-- Default editor height and width
 	self.editorx = 6
@@ -955,6 +1116,8 @@ function Phrases:initialize(sel, atoms)
 	self.savename = "default.lua"
 	self.filepath = ""
 	
+	self.hotseatnum = 1 -- Currently active hotseat number
+	
 	-- Default BPM, TPB, GATE values
 	self.bpm = 120
 	self.tpb = 4
@@ -968,10 +1131,9 @@ function Phrases:initialize(sel, atoms)
 	}
 	
 	self.phrase = {}
-	for i = 1, self.gridx * self.gridy do -- Set default phrase data
-		self:setDefaultVars(i)
-		self:setDefaultNotes(i)
-	end
+	
+	self.adc = {} -- Table for a song's ADC values
+	self.adcpoint = 1 -- Currently active ADC value in the editor
 	
 	self.midi = {} -- Table for tracking global MIDI sustain values
 	for chan = 0, 15 do
@@ -981,7 +1143,15 @@ function Phrases:initialize(sel, atoms)
 		end
 	end
 	
-	self.adc = {} -- Table for a song's ADC values
+	self.trpoint = 1 -- Currently active transference value in the editor
+	
+	-- Tables to track which sustain values have been shifted by ADC activity
+	self.noteshift = {}
+	self.veloshift = {}
+	for i = 0, 15 do
+		self.noteshift[i] = {}
+		self.veloshift[i] = {}
+	end
 	
 	self.matrix = makeTrMatrix(self.gridx, self.gridy) -- Matrix to link keys to other keys, for transference purposes
 	
@@ -1000,9 +1170,8 @@ function Phrases:initialize(sel, atoms)
 	
 	self.recording = false -- Toggle whether to record data from incoming keystrokes
 	
+	self.inputmode = "note" -- Set to 'note', 'tr', or 'adc', depending on which input mode is active
 	self.pitchview = true -- Flag that controls whether editor data values are shown as pitches or numbers
-	
-	self.inputmode = "note" -- Set to either 'note' or 'tr', depending on which input mode is active
 	
 	self.midicatch = "all" -- Changes which sort of MIDI input is accepted
 	
@@ -1063,27 +1232,6 @@ function Phrases:in_1_list(list)
 				-- Update the active phrase's display-value hash
 				self.phrase[self.key].dhash = makeDisplayValHash(self.phrase[self.key].notes)
 				
-			elseif self.inputmode == "tr" then -- Use incoming keycommands to set the weight of transference values
-			
-				if rangeCheck(self.channel, 1, 9) then
-					self.phrase[self.key].transfer[self.channel] = putnote
-					pd.post("Phrase " .. self.key .. ": Set transference direction " .. self.channel .. " to strength " .. putnote)
-				else
-					self.phrase[self.key].transfer[10] = (self.phrase[self.key].transfer[10] + 1) % 2
-					pd.post("Phrase " .. self.key .. ": Persistence set to " .. self.phrase[self.key].transfer[10])
-				end
-		
-				-- Update the relevant transference sub-button in the grid GUI
-				local xtr, ytr = keyToCoords(self.key, self.gridx, self.gridy, 1, 0)
-				local trbut = ytr .. "-" .. xtr .. "-grid-"
-				if rangeCheck(self.channel, 1, 9) then
-					if putnote > 0 then
-						self:outlet(5, "list", rgbOutList(trbut .. "sub-" .. self.channel, self.color[8][3], self.color[8][3]))
-					else
-						self:outlet(5, "list", rgbOutList(trbut .. "sub-" .. self.channel, self.color[8][2], self.color[8][2]))
-					end
-				end
-	
 			end
 			
 			-- If a new command was inserted, increase note pointer, and prevent overshooting the limit of the note array
@@ -1121,9 +1269,8 @@ function Phrases:in_1_list(list)
 		
 	elseif cmd:sub(1, 12) == "LOAD_HOTSEAT" then -- Savefile hotseat commands
 	
-		local hsnum = tonumber(cmd:sub(14))
-		
-		self.loadname = self.hotseats[hsnum]
+		self.hotseatnum = tonumber(cmd:sub(14))
+		self.loadname = self.hotseats[self.hotseatnum]
 		pd.post("Current loadfile name is now: " .. self.loadname)
 		
 		self:updateHotseatButtons()
@@ -1137,35 +1284,50 @@ function Phrases:in_1_list(list)
 				activecheck = true
 			end
 		end
-	
+
 		-- Does not require recording-mode to be on; but no phrases must currently be active, in order to prevent errors
 		if activecheck == false then
-		
+
 			-- self:dofile() is currently the only serviceable dofile method in pdlua, and apparently it will be changed in a later version of pdlua, so this load function will probably have to be changed later as well.
 			local ltab = self:dofile(self.loadname)
-			
+
 			self.phrase = {} -- Unset all phrase data
 			self.adc = {} -- Unset all ADC data
-		
+
 			for k, v in pairs(ltab) do -- Load all data tables
-			
+
 				pd.post("loading: " .. k .. " - " .. tostring(v))
-				
+
 				if k == "phrase" then
-				
+
 					for pnum, pcontents in pairs(v) do
 					
-						self:setDefaultVars(pnum) -- Set default sequencer variables, which aren't saved by the editor
-					
-						for kk, vv in pairs(pcontents) do -- Set the phrase values that were saved (transference, notes)
-							self.phrase[pnum][kk] = vv
+						if pnum <= (self.gridx * self.gridy) then -- Only load the phrase if it fits within the Monome that is being used
+
+							self:setDefaultVars(pnum) -- Set default sequencer variables, which aren't saved by the editor
+
+							for kk, vv in pairs(pcontents) do -- Set the phrase values that were saved (transference, notes)
+								self.phrase[pnum][kk] = vv
+							end
+
+							self.phrase[pnum].dhash = makeDisplayValHash(self.phrase[pnum].notes) -- Update the phrase's display-value hash
+							
 						end
-						
-						-- Update the phrase's display-value hash
-						self.phrase[pnum].dhash = makeDisplayValHash(self.phrase[pnum].notes)
-						
+
 					end
 					
+					-- If the Monome has more buttons than the savefile has phrases, fill the remaining unset phrases with dummy values
+					if #v < (self.gridx * self.gridy) then
+					
+						for i = #v + 1, self.gridx * self.gridy do
+							self:setDefaultVars(i) -- Set default variables for the empty phrase
+							self:setDefaultNotes(i) -- Default notes too
+							pd.post("Inserted default sequence, at phrase " .. i)
+							self.phrase[i].dhash = makeDisplayValHash(self.phrase[i].notes) -- Update the phrase's display-value hash
+						end
+					
+					end
+
 					-- Show the correct neutral transference sub-buttons in the grid GUI for a freshly loaded phrase
 					for x = 0, self.gridx - 1 do
 						for y = 0, self.gridy - 1 do
@@ -1179,36 +1341,58 @@ function Phrases:in_1_list(list)
 							end
 						end
 					end
-					
+
 				else
 					self[k] = v -- Set global non-phrase variables
 				end
-				
+
 			end
 			
-			-- Reset the editor's key and pointer, to prevent out-of-bounds errors
+			if #self.adc < self.adcnum then -- If fewer ADCs are in the loadfile than on the Monome, fill the extras with dummy values
+			
+				for i = #self.adc + 1, self.adcnum do
+					self.adc[i] = {
+						["channel"] = 0,
+						["target"] = 3,
+						["style"] = "relative",
+						["magnitude"] = 2,
+						["val"] = 0,
+					}
+					pd.post("Inserted default ADC values, at ADC " .. i)
+				end
+				
+			elseif self.adcnum < #self.adc then -- If more ADCs are in the loadfile than on the Monome, remove the superfluous ones from the ADC table data
+			
+				for i = #self.adc, self.adcnum, -1 do
+					table.remove(self.adc, i)
+				end
+			
+			end
+
+			-- Reset the editor's phrase key and pointer, and ADC pointer, to prevent various fatal and nonfatal out-of-bounds errors
 			self.key = 1
 			self.pointer = 1
-			
+			self.adcpoint = 1
+
 			-- Remove the previous file's information from the old history table, and replace it with the new file's initial state
 			self:replaceOldHistory()
-			
+
 			-- Send updated global BPM/TPB/GATE information to the program's Pd side
 			pd.send("phrases-bpm", "float", {self.bpm})
 			pd.send("phrases-tpb", "float", {self.tpb})
 			pd.send("phrases-gate", "float", {self.gate})
-			
+
 			self:updateEditorGUI()
-			
+
 			pd.post("Loaded the contents of " .. self.loadname .. "!")
-			
+
 		else
-		
+
 			pd.post("Couldn't load file: Some phrases are still active!")
-		
+
 		end
 		
-	elseif cmd == "SAVE" then -- Save data as a Lua table in the savename
+		elseif cmd == "SAVE" then -- Save data as a Lua table in the savename
 	
 		local o = "return\n\n" -- Make the table executable, for the load function
 
@@ -1224,11 +1408,10 @@ function Phrases:in_1_list(list)
 		
 			o = o .. "\t\t{ -- ADC " .. k .. "\n"
 			
-			o = o .. "\t\t\t[\"effect\"] = \"" .. v.effect .. "\",\n"
-			o = o .. "\t\t\t[\"target\"] = \"" .. v.target .. "\",\n"
-			o = o .. "\t\t\t[\"chan\"] = " .. v.chan .. ",\n"
-			o = o .. "\t\t\t[\"range\"] = " .. v.range .. ",\n"
-			o = o .. "\t\t\t[\"offset\"] = " .. v.offset .. ",\n"
+			o = o .. "\t\t\t[\"channel\"] = " .. v.channel .. ",\n"
+			o = o .. "\t\t\t[\"target\"] = " .. v.target .. ",\n"
+			o = o .. "\t\t\t[\"style\"] = \"" .. v.style .. "\",\n"
+			o = o .. "\t\t\t[\"magnitude\"] = " .. v.magnitude .. ",\n"
 			o = o .. "\t\t\t[\"val\"] = 0,\n"
 			
 			o = o .. "\t\t},\n\n"
@@ -1348,16 +1531,44 @@ function Phrases:in_1_list(list)
 	or (cmd == "NOTE_PREV") -- Retreat the note pointer
 	then
 	
-		if cmd == "NOTE_NEXT" then
-			self.pointer = self.pointer + 1
-			if self.pointer > #self.phrase[self.key].notes then
-				self.pointer = 1
+		if self.inputmode == "note" then
+		
+			if cmd == "NOTE_NEXT" then
+				self.pointer = self.pointer + 1
+				if self.pointer > #self.phrase[self.key].notes then
+					self.pointer = 1
+				end
+			else
+				self.pointer = self.pointer - 1
+				if self.pointer <= 0 then
+					self.pointer = #self.phrase[self.key].notes
+				end
 			end
-		else
-			self.pointer = self.pointer - 1
-			if self.pointer <= 0 then
-				self.pointer = #self.phrase[self.key].notes
+			
+		elseif self.inputmode == "tr" then -- Advance/retreat the transference pointer
+		
+			if cmd == "NOTE_NEXT" then
+				self.trpoint = (self.trpoint % 10) + 1
+			else
+				self.trpoint = self.trpoint - 1
+				if self.trpoint <= 0 then
+					self.trpoint = 10
+				end
 			end
+		
+		elseif (self.inputmode == "adc") -- Advance/retreat the active-ADC pointer, if there are any ADCs in the current setup
+		and (self.adcnum > 0)
+		then
+		
+			if cmd == "NOTE_NEXT" then
+				self.adcpoint = (self.adcpoint % self.adcnum) + 1
+			else
+				self.adcpoint = self.adcpoint - 1
+				if self.adcpoint <= 0 then
+					self.adcpoint = self.adcnum
+				end
+			end
+		
 		end
 		
 		self:updateEditorGUI()
@@ -1435,46 +1646,64 @@ function Phrases:in_1_list(list)
 	
 	elseif cmd == "CHANNEL_DEC" then -- Decrease channel
 	
-		self.channel = (self.channel - 1) % 16
+		if (self.inputmode == "note")
+		or (self.inputmode == "tr")
+		then
+		
+			self.channel = (self.channel - 1) % 16
+			pd.post("MIDI Channel set to " .. self.channel)
+			
+		elseif (self.inputmode == "adc")
+		and (self.adc[self.adcpoint] ~= nil)
+		then
+		
+			self.adc[self.adcpoint].channel = (self.adc[self.adcpoint].channel - 1) % 16
+			pd.post("ADC " .. self.adcpoint .. ": target channel set to " .. self.adc[self.adcpoint].channel)
+			
+			self:addStateToHistory()
+		
+		end
 		
 		self:updateEditorGUI()
-		pd.post("MIDI Channel set to " .. self.channel)
 	
 	elseif cmd == "CHANNEL_INC" then -- Increase channel
 	
-		self.channel = (self.channel + 1) % 16
+		if (self.inputmode == "note")
+		or (self.inputmode == "tr")
+		then
+		
+			self.channel = (self.channel + 1) % 16
+			pd.post("MIDI Channel set to " .. self.channel)
+		
+		elseif (self.inputmode == "adc")
+		and (self.adc[self.adcpoint] ~= nil)
+		then
+		
+			self.adc[self.adcpoint].channel = (self.adc[self.adcpoint].channel + 1) % 16
+			pd.post("ADC " .. self.adcpoint .. ": target channel set to " .. self.adc[self.adcpoint].channel)
+			
+			self:addStateToHistory()
+		
+		end
 		
 		self:updateEditorGUI()
-		pd.post("MIDI Channel set to " .. self.channel)
 		
 	elseif cmd == "VELOCITY_DEC1" then -- Decrease velocity
 	
-		self.velocity = (self.velocity - 1) % 128
-		
-		self:updateVelocityButton()
-		pd.post("MIDI Velocity set to " .. self.velocity)
+		self:shiftVolumeVal(-1)
 	
 	elseif cmd == "VELOCITY_INC1" then -- Increase velocity
 	
-		self.velocity = (self.velocity + 1) % 128
-		
-		self:updateVelocityButton()
-		pd.post("MIDI Velocity set to " .. self.velocity)
-		
+		self:shiftVolumeVal(1)
+	
 	elseif cmd == "VELOCITY_DEC10" then -- Decrease velocity by 10
 	
-		self.velocity = (self.velocity - 10) % 128
-		
-		self:updateVelocityButton()
-		pd.post("MIDI Velocity set to " .. self.velocity)
+		self:shiftVolumeVal(-10)
 	
 	elseif cmd == "VELOCITY_INC10" then -- Increase velocity by 10
 	
-		self.velocity = (self.velocity + 10) % 128
-		
-		self:updateVelocityButton()
-		pd.post("MIDI Velocity set to " .. self.velocity)
-		
+		self:shiftVolumeVal(10)
+	
 	elseif cmd == "OCTAVE_DEC" then -- Lower octave
 	
 		self.octave = (self.octave - 1) % 12
@@ -1493,34 +1722,62 @@ function Phrases:in_1_list(list)
 	or (cmd == "COMMAND_DEC") -- Or toggle backwards
 	then
 	
-		local cmdkey = 1
-		local cmdmod = 1
-		if cmd == "COMMAND_DEC" then
-			cmdmod = -1
-		end
-		
-		for k, v in ipairs(cmdtable) do
-		
-			if v == self.command then
+		if (self.inputmode == "note")
+		or (self.inputmode == "tr")
+		then
+	
+			local cmdkey = 1
+			local cmdmod = 1
+			if cmd == "COMMAND_DEC" then
+				cmdmod = -1
+			end
 			
-				cmdkey = k + cmdmod
-				if cmdkey < 1 then
-					cmdkey = #cmdtable
-				elseif cmdkey > #cmdtable then
-					cmdkey = 1
-				end
+			for k, v in ipairs(cmdtable) do
+			
+				if v == self.command then
 				
-				do break end
+					cmdkey = k + cmdmod
+					if cmdkey < 1 then
+						cmdkey = #cmdtable
+					elseif cmdkey > #cmdtable then
+						cmdkey = 1
+					end
+					
+					do break end
+					
+				end
 				
 			end
 			
+			self.command = cmdtable[cmdkey]
+			
+			pd.post("Command type: " .. cmdnames[cmdkey] .. " (" .. self.command .. ")")
+			
+			self:updateCommandButton()
+			
+		elseif (self.inputmode == "adc")
+		and (self.adc[self.adcpoint] ~= nil)
+		then -- Toggle ADC target between note-byte (2) and velocity-byte (3)
+		
+			if cmd == "COMMAND_DEC" then
+			
+				self.adc[self.adcpoint].target = ((self.adc[self.adcpoint].target - 1) % 2) + 2
+				
+			else
+			
+				if self.adc[self.adcpoint].style == "relative" then
+					self.adc[self.adcpoint].style = "absolute"
+				else
+					self.adc[self.adcpoint].style = "relative"
+				end
+				
+			end
+			
+			self:addStateToHistory()
+		
+			self:updateEditorGUI()
+			
 		end
-		
-		self.command = cmdtable[cmdkey]
-		
-		pd.post("Command type: " .. cmdnames[cmdkey] .. " (" .. self.command .. ")")
-		
-		self:updateCommandButton()
 	
 	elseif cmd == "NOTE_DELETE" then -- Delete current note
 	
@@ -2135,14 +2392,24 @@ function Phrases:in_3_list(k)
 end
 
 -- Interpret an incoming Monome ADC command
-function Phrases:in_4_list(adc)
+function Phrases:in_4_list(n)
 
-	adc[1] = adc[1] + 1 -- Convert from 0-indexed to 1-indexed
+	n[1] = n[1] + 1 -- Convert from 0-indexed to 1-indexed
 
-	if self.adc[adc[1]] ~= nil then
-		self.adc[adc[1]].val = adc[2]
+	-- Store the new ADC value locally
+	if self.adc[n[1]] ~= nil then
+		self.adc[n[1]].val = n[2]
 	end
-
+	
+	-- Update the ADC-tile's color, based on the current ADC value
+	local rgbadc = {}
+	for i = 1, 3 do
+		rgbadc[i] = math.max(1, math.min(255, math.floor(math.abs(
+			self.color[5][1][i] + ((self.color[6][1][i] - self.color[5][1][i]) * n[2])
+		))))
+	end
+	self:outlet(5, "list", rgbOutList(n[1] .. "-adc-button", rgbadc, self.color[8][1]))
+	
 end
 
 -- React to incoming tempo ticks
@@ -2296,52 +2563,49 @@ function Phrases:in_8_list(s)
 	pd.post("NOTE: Data has NOT been saved! To save to this savefile, press: Shift-?-|")
 end
 
--- Get savefile path
-function Phrases:in_9_list(s)
-	-- table.concat() is necessary, because Pd will interpret paths that contain spaces as lists
-	self.filepath = table.concat(s, " ")
-	pd.post("Current savefile path is now: " .. self.filepath)
-end
-
 -- Get global BPM value
-function Phrases:in_10_float(f)
+function Phrases:in_9_float(f)
 	self.bpm = f
 end
 
 -- Get global TPB value
-function Phrases:in_11_float(f)
+function Phrases:in_10_float(f)
 	self.tpb = f
 end
 
 -- Get global GATE value
-function Phrases:in_12_float(f)
+function Phrases:in_11_float(f)
 	self.gate = f
 end
 
--- Get global grid-width
-function Phrases:in_13_float(x)
-	self.gridx = x
+-- Get preferences list, and act upon some of its contents
+function Phrases:in_12_list(n)
+
+	self.gridx = n[1]
+	self.gridy = n[2]
+	self.adcnum = n[3]
+	
+	pd.send("phrases-osc-serial-type", "float", {n[4]})
+	pd.send("phrases-osc-in-port", "float", {n[5]})
+	pd.send("phrases-osc-out-port", "float", {n[6]})
+	
+	self.editorx = n[15]
+	self.editory = n[16]
+	
 	self.matrix = makeTrMatrix(self.gridx, self.gridy)
-end
-
--- Get global grid-height
-function Phrases:in_14_float(y)
-	self.gridy = y
-	self.matrix = makeTrMatrix(self.gridx, self.gridy)
-end
-
--- Get global editor-width
-function Phrases:in_15_float(x)
-	self.editorx = x
-end
-
--- Get global editor-height
-function Phrases:in_16_float(y)
-	self.editory = y
+	
+	-- Gather the savefile directory from the end of the flat list, and shape it properly
+	local tabremain = {}
+	for i = 21, #n do
+		table.insert(tabremain, n[i])
+	end
+	self.filepath = table.concat(tabremain, " ") -- table.concat() is necessary, because Pd will have interpreted paths that contain spaces as lists
+	pd.post("Current savefile path is now: " .. self.filepath)
+	
 end
 
 -- Get GUI color-values
-function Phrases:in_17_list(c)
+function Phrases:in_13_list(c)
 	
 	local ckey = table.remove(c, 1)
 	self.color[ckey] = modColor(c)

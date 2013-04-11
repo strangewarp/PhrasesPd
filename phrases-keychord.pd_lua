@@ -1,8 +1,3 @@
---[[
-
-Key-chord-parser object, designed for the particular requirements of PhrasesPd.
-
---]]
 
 local KeyParser = pd.Class:new():register("phrases-keychord")
 
@@ -45,6 +40,11 @@ function KeyParser:in_1_list(cmd)
 
 	if cmd[1] == 1 then -- On down-keystrokes, put the keypress into the keysdown table, compute commands, and send out its symbol
 	
+		if cmd[2] == "Space" then -- Keychord panic command, to flush the keychord array
+			self.keysdown = {}
+			self:outlet(1, "symbol", {"UPDATE_EDITOR_GUI"})
+		end
+
 		self.keysdown[cmd[2]] = cmd[2]
 		
 		self:outlet(2, "symbol", {cmd[2]})

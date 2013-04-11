@@ -108,6 +108,7 @@ return {
 	modenames = {
 		"note",
 		"tr",
+		"adc",
 	},
 	
 }

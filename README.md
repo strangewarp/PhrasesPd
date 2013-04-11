@@ -1,5 +1,5 @@
 
-WARNING ALPHA
+WARNING BETA
 
 MOST FEATURES ARE ONLY MINIMALLY TESTED
 
@@ -9,24 +9,24 @@ Feel free to play around with the PhrasesPd editor and sequencer. If you are usi
 
 PhrasesPd
 
-PhrasesPd is a MIDI sequencer, for arbitrarily-sized grid controllers capable of using the Monome OSC communications format.
+PhrasesPd is a MIDI sequencer, for arbitrarily-sized grid controllers capable of using the Monome OSC communications format. It is for composing phrases of MIDI data, which can then be saved/loaded as songs, and combined in novel ways during performance. It is very informationally dense, capable of controlling long and complex songs from a single Monome 64, and yet offers considerable options for improvisation too.
 
-It has an integrated sequence editor, which is controlled by a combination of computer keyboard, MIDI controller, and grid controller.
+PhrasesPd allows for polyphony, polyrhythms, ADC control of note and volume parameters, and generative transference of phrase activity.
 
-Song data is saved as Lua table files, in a manner that is both executable and decently human-readable.
+It has an integrated phrase editor, which is controlled by a combination of computer keyboard, MIDI controller, and grid controller. Song data is saved as Lua table files, in a manner that is both executable and human-readable.
 
 
 
 Dependencies:
+
 Puredata-extended 0.43.4
 
 
 
 TO-DO LIST (in rough order of desired implementation):
 
-* Refactoring: Replace nooby table-copy mechanisms with the more robust deepCopy function
-* Add feature: ADC note-shifting capabilities, plus editor panel
 * --- Beta Release Goes Here ---
+* Refactoring: Combine preferences files, clean things up in general
 
 
 
@@ -63,46 +63,59 @@ The directory itself can be wherever, but preferably somewhere convenient in you
 
 
 
-Editor Commands (default keystrokes):
+Editor Commands:
 
-Choose savefile name - Enter a custom savefile name in the main phrasespd.pd window
+(Note: These are the default key-commands, and can be changed by editing phrases-keychord-tables.lua)
+
+Choose savefile name - Type a filename in the "Custom savefile" box in the main phrasespd.pd window, and hit Enter
 Save file - Shift-?-|
 
-Choose loadfile name - Shift-[number], Shift-BackSpace-[number], or enter a custom loadfile name in the main phrasespd.pd window
+Choose loadfile hotseat - Shift-[number] (hotseats 1-10), Shift-BackSpace-[number] (hotseats 11-20)
+Enter custom loadfile name - Type a filename in the "Custom loadfile" box in the main phrasespd.pd window, and hit Enter
 Load file - Shift-Tab-Enter (WARNING: Erases any unsaved changes)
 
-Toggle Recording/Play modes - Esc
+Keystroke Panic (because current keychord detection is fallible): Space
 
+Toggle between phrases - Any Monome button (while in REC mode)
+Play phrase - Any Monome button (while in PLAY mode)
+
+Previous phrase - Left arrow
+Next phrase - Right arrow
 Previous note - Up arrow
 Next note - Down arrow
 First note - Home
-Opposite note - End
+Inverse note - End
 Page up - PageUp
 Page down - PageDown
 
-Insert note - zsxdcvgbhnjm,lq2w3er5t6y7ui9o0p
+Toggle Recording/Play modes - Esc
+Toggle between input panels - Insert
+Toggle between number/pitch views - Enter
+Toggle between MIDI Catch modes - Shift-O, Shift-P
 
-Delete note - Delete
+Insert MIDI command - zsxdcvgbhnjm,lq2w3er5t6y7ui9o0p
 Insert blank note - Backspace
+Delete note - Delete
 
 Undo - Shift-Tab-Z
 Redo - Shift-Tab-Y
 
-Previous phrase - Left arrow
-Next phrase - Right arrow
+Increase spacing - Shift-Up arrow
+Decrease spacing - Shift-Down arrow
 
-Increase spacing - Shift-Up
-Decrease spacing - Shift-Down
-
-Toggle between MIDI-Catch modes - Shift-O and Shift-P
-
-MIDI channel +1 - '
-MIDI channel -1 - ;
+Increase MIDI channel - '
+Decrease MIDI channel - ;
 
 Default MIDI velocity +1 - =
 Default MIDI velocity -1 - -
 Default MIDI velocity +10 - +
 Default MIDI velocity -10 - _
+
+Octave +1 - ]
+Octave -1 - [
+
+Next command type - /
+Previous command type - .
 
 Move active note back by default velocity value - Shift-Q
 Move active note forward by default velocity value - Shift-W
@@ -121,14 +134,5 @@ Shift active velocity byte up by default velocity value - Shift-X
 Shift all velocity-bytes in phrase down by default velocity value - Shift-C
 Shift all velocity-bytes in phrase up by default velocity value - Shift-V
 
-Add note-offs to active phrase - Shift-Tab-A
+Add note-offs to active phrase before each note - Shift-Tab-A
 Add note-offs to active phrase based on spacing value - Shift-Tab-S
-
-Octave +1 - ]
-Octave -1 - [
-
-Next command type - /
-Previous command type - .
-
-Toggle input mode - Insert
-Toggle number/pitch modes - Enter

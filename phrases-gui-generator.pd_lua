@@ -1,8 +1,3 @@
---[[
-
-GUI-creation object, designed for the particular requirements of PhrasesPd.
-
---]]
 
 local GUIGenerator = pd.Class:new():register("phrases-gui-generator")
 
@@ -90,19 +85,8 @@ end
 function GUIGenerator:initialize(sel, atoms)
 
 	-- 1. GUI-creation bang
-	-- 2. Grid width (cells)
-	-- 3. Grid height (cells)
-	-- 4. Grid width (pixels)
-	-- 5. Grid height (pixels)
-	-- 6. Grid margin x (pixels)
-	-- 7. Grid margin y (pixels)
-	-- 8. Editor width (cells)
-	-- 9. Editor height (cells)
-	-- 10. Editor width (pixels)
-	-- 11. Editor height (pixels)
-	-- 12. Editor margin x (pixels)
-	-- 13. Editor margin y (pixels)
-	self.inlets = 13
+	-- 2. Preferences list
+	self.inlets = 2
 	
 	-- All GUI data is sent directly to the GUI windows, using pd.send() - thus, no outlets
 	self.outlets = 0
@@ -119,6 +103,17 @@ function GUIGenerator:initialize(sel, atoms)
 	self.gridmx = 2
 	self.gridmy = 2
 	
+	-- Number of ADC buttons
+	self.adcnum = 2
+	
+	-- ADC cell sizes; X and Y
+	self.adccwidth = 50
+	self.adccheight = 50
+	
+	-- ADC tile margins; X and Y
+	self.adcmx = 5
+	self.adcmy = 5
+	
 	-- Editor cell count; X and Y
 	self.editorcx = 6
 	self.editorcy = 32
@@ -131,7 +126,8 @@ function GUIGenerator:initialize(sel, atoms)
 	self.editormx = 1
 	self.editormy = 4
 	
-	self.gridcwidth, self.gridcheight, self.editorcwidth, self.editorcheight = 1, 1, 1, 1
+	self.gridcwidth, self.gridcheight,
+	self.editorcwidth, self.editorcheight = 1, 1, 1, 1
 	-- Calculate cell sizes for the grid and editor GUIs
 	self:calcCellSizes()
 
@@ -144,6 +140,14 @@ end
 -- Send all GUI elements
 function GUIGenerator:in_1_bang()
 
+	-- Create name-list for ADC tiles
+	local adcnames = {}
+	if self.adcnum >= 1 then
+		for i = 1, self.adcnum do
+			table.insert(adcnames, i .. "-adc-button")
+		end
+	end
+
 	-- Generate grid-window background
 	buildGrid(
 		{"phrases-grid-bg"},
@@ -151,8 +155,11 @@ function GUIGenerator:in_1_bang()
 		1,
 		0,
 		0,
-		((self.gridcwidth + self.gridmx) * self.gridcx) + self.gridcwidth + (self.gridmx * 2),
-		((self.gridcheight + self.gridmy) * self.gridcy) + self.editormy,
+		((self.gridcwidth + self.gridmx) * self.gridcx) + self.gridmx + math.max(self.gridcwidth + self.gridmx, self.adccwidth + self.adcmx),
+		math.max(
+			((self.gridcheight + self.gridmy) * self.gridcy) + self.gridmy, -- Height of main grid
+			self.gridcheight + self.gridcy + ((self.adccheight + self.adcmy) * #adcnames) -- Total sidebar height
+		),
 		1,
 		1,
 		_,
@@ -219,7 +226,7 @@ function GUIGenerator:in_1_bang()
 		end
 	end
 
-	-- Generate gate-window side-panel
+	-- Generate first grid-window side-panel (GATING)
 	buildGrid(
 		gsnames,
 		"phrases-grid-gui-object",
@@ -230,11 +237,27 @@ function GUIGenerator:in_1_bang()
 		self.gridcheight,
 		self.gridmx,
 		self.gridmy,
-		math.floor(self.gridcwidth / 50),
-		6,
-		math.floor(self.gridcheight * 1.5)
+		_,
+		_,
+		_
 	)
 
+	-- Generate second grid-window side-panel (ADCs)
+	buildGrid(
+		adcnames,
+		"phrases-grid-gui-object",
+		1,
+		((self.gridcwidth + self.gridmx) * self.gridcx) + self.adcmx,
+		self.gridcheight + self.gridmy + self.adcmy,
+		self.adccwidth,
+		self.adccheight,
+		self.adcmx,
+		self.adcmy,
+		_,
+		_,
+		_
+	)
+	
 	-- Generate editor-window background
 	buildGrid(
 		{"phrases-editor-bg"},
@@ -307,74 +330,30 @@ function GUIGenerator:in_1_bang()
 
 end
 
-function GUIGenerator:in_2_float(n)
-	n = math.floor(n)
-	self.gridcx = n
-	self:calcCellSizes()
-end
+function GUIGenerator:in_2_list(n)
 
-function GUIGenerator:in_3_float(n)
-	n = math.floor(n)
-	self.gridcy = n
+	self.gridcx = n[1]
+	self.gridcy = n[2]
+	
+	self.adcnum = n[3]
+	
+	self.gridpx = n[7]
+	self.gridpy = n[8]
+	self.gridmx = n[9]
+	self.gridmy = n[10]
+	
+	self.adccwidth = n[11]
+	self.adccheight = n[12]
+	self.adcmx = n[13]
+	self.adcmy = n[14]
+	
+	self.editorcx = n[15]
+	self.editorcy = n[16]
+	self.editorpx = n[17]
+	self.editorpy = n[18]
+	self.editormx = n[19]
+	self.editormy = n[20]
+	
 	self:calcCellSizes()
-end
-
-function GUIGenerator:in_4_float(n)
-	n = math.floor(n)
-	self.gridpx = n
-	self:calcCellSizes()
-end
-
-function GUIGenerator:in_5_float(n)
-	n = math.floor(n)
-	self.gridpy = n
-	self:calcCellSizes()
-end
-
-function GUIGenerator:in_6_float(n)
-	n = math.floor(n)
-	self.gridmx = n
-	self:calcCellSizes()
-end
-
-function GUIGenerator:in_7_float(n)
-	n = math.floor(n)
-	self.gridmy = n
-	self:calcCellSizes()
-end
-
-function GUIGenerator:in_8_float(n)
-	n = math.floor(n)
-	self.editorcx = n
-	self:calcCellSizes()
-end
-
-function GUIGenerator:in_9_float(n)
-	n = math.floor(n)
-	self.editorcy = n
-	self:calcCellSizes()
-end
-
-function GUIGenerator:in_10_float(n)
-	n = math.floor(n)
-	self.editorpx = n
-	self:calcCellSizes()
-end
-
-function GUIGenerator:in_11_float(n)
-	n = math.floor(n)
-	self.editorpy = n
-	self:calcCellSizes()
-end
-
-function GUIGenerator:in_12_float(n)
-	n = math.floor(n)
-	self.editormx = n
-	self:calcCellSizes()
-end
-
-function GUIGenerator:in_13_float(n)
-	n = math.floor(n)
-	self.editormy = n
-	self:calcCellSizes()
+	
 end
