@@ -130,13 +130,11 @@ Move all notes in active phrase forward by default velocity value - Shift-R
 
 Shift active note-byte down by default velocity value - Shift-A
 Shift active note-byte up by default velocity value - Shift-S
-
 Shift all note-bytes in phrase down by default velocity value - Shift-D
 Shift all note-bytes in phrase up by default velocity value - Shift-F
 
 Shift active velocity byte down by default velocity value - Shift-Z
 Shift active velocity byte up by default velocity value - Shift-X
-
 Shift all velocity-bytes in phrase down by default velocity value - Shift-C
 Shift all velocity-bytes in phrase up by default velocity value - Shift-V
 
