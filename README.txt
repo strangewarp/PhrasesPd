@@ -63,6 +63,12 @@ The directory itself can be wherever, but preferably somewhere convenient in you
 
 
 
+Monome communications prefix:
+
+/phrases
+
+
+
 Editor Commands:
 
 (Note: These are the default key-commands, and can be changed by editing phrases-keychord-tables.lua)
