@@ -17,6 +17,12 @@ It has an integrated phrase editor, which is controlled by a combination of comp
 
 
 
+Monome Wiki page:
+
+http://monome.org/docs/app:phrasespd
+
+
+
 Dependencies:
 
 Puredata-extended 0.43.4

@@ -455,7 +455,7 @@ function Phrases:shiftVolumeVal(val)
 		local xtr, ytr = keyToCoords(self.key, self.gridx, self.gridy, 1, 0)
 		local trbut = ytr .. "-" .. xtr .. "-grid-"
 		if rangeCheck(self.channel, 1, 9) then
-			if putnote > 0 then
+			if self.phrase[self.key].transfer[self.trpoint] > 0 then
 				self:outlet(5, "list", rgbOutList(trbut .. "sub-" .. self.channel, self.color[8][3], self.color[8][3]))
 			else
 				self:outlet(5, "list", rgbOutList(trbut .. "sub-" .. self.channel, self.color[8][2], self.color[8][2]))
