@@ -414,7 +414,7 @@ function Phrases:iterate(k)
 			-- Halt activity on all self-terminating phrases
 			if self.phrase[k].transfer[10] == 0 then
 				self.phrase[k].active = false
-				self:haltPhraseMidi(k)
+				table.insert(self.trhalts, k)
 			end
 			
 		end
@@ -1150,8 +1150,9 @@ function Phrases:initialize(sel, atoms)
 	
 	self.matrix = makeTrMatrix(self.gridx, self.gridy) -- Matrix to link keys to other keys, for transference purposes
 	
-	self.queue = {} -- Table for holding all incoming button presses; it is emptied out on every gate-tick
-	self.trqueue = {} -- Table for holding all ongoing transference; it is filled and flushed during every tick
+	self.queue = {} -- Holds all incoming button presses; it is emptied out on every gate-tick
+	self.trqueue = {} -- Holds all ongoing transference; it is filled and flushed during every tick
+	self.trhalts = {} -- Holds keys of all active phrases with self-terminating transference, so that their MIDI sustains are turned off at the proper tick
 	
 	self.key = 1 -- Currently active phrase
 	
@@ -2363,8 +2364,8 @@ function Phrases:in_3_list(k)
 			then -- Then immediately turn it off, to prevent trainwrecks of short phrases
 				-- Reset the phrase's internal variables, MIDI sustains, GUI cell, and Monome button
 				local clearname = k[2] .. "-" .. k[1] .. "-grid-"
+				table.insert(self.trhalts, button)
 				self.phrase[button].active = false
-				self:haltPhraseMidi(button)
 				self.phrase[button].pointer = 1
 				self.phrase[button].tick = 1
 				self:outlet(3, "list", {k[1], k[2], 0})
@@ -2377,7 +2378,7 @@ function Phrases:in_3_list(k)
 				end
 			else -- Record a keystroke to the global keystroke-queue, which is emptied and parsed on each gate tick
 				table.insert(self.queue, button)
-				pd.post("Queued key: " .. button)
+				pd.post("Phrase " .. button .. ": QUEUED")
 			end
 			
 		end
@@ -2419,13 +2420,17 @@ function Phrases:in_5_bang()
 	end
 	self:outlet(5, "list", rgbOutList("phrases-grid-gate-button", rgbgate, self.color[8][1]))
 	
+	-- Clear the MIDI sustains from any phrases whose transference was self-terminating on the previous tick
+	for _, v in pairs(self.trhalts) do
+		self:haltPhraseMidi(v)
+		pd.post("Phrase " .. v .. ": OFF")
+	end
+	self.trhalts = {}
+	
 	-- On every tick, do things to every active phrase
 	for k, v in ipairs(self.phrase) do
 	
 		if v.active == true then
-		
-			-- debugging
-			pd.post("phrase" .. k .. " - tick" .. v.tick .. " - point" .. v.pointer .. " - hash" .. v.dhash[v.pointer])
 		
 			self:iterate(k) -- Run the iterate function once per active phrase per tick
 		
@@ -2467,6 +2472,8 @@ function Phrases:in_5_bang()
 		local trax, tray = keyToCoords(trnew, self.gridx, self.gridy, 1, 0)
 		self:outlet(3, "list", {trax, tray, 1})
 		self:outlet(5, "list", rgbOutList(tray .. "-" .. trax .. "-grid-button", self.color[5][1], self.color[5][1]))
+		
+		pd.post("Phrase " .. k .. ": ON")
 		
 		-- Clean up the GUI of the phrase whose activity caused the transference in the first place
 		if k ~= trnew then
@@ -2510,6 +2517,8 @@ function Phrases:in_6_bang()
 			-- Send a message to the Monome button updater
 			self:outlet(3, "list", {outx, outy, 1})
 			
+			pd.post("Phrase " .. v .. ": ON")
+			
 		else -- Off-toggle
 		
 			self.phrase[v].active = false
@@ -2532,6 +2541,8 @@ function Phrases:in_6_bang()
 					self:outlet(5, "list", rgbOutList(outbutton .. "sub-" .. i, self.color[8][3], self.color[8][3]))
 				end
 			end
+			
+			pd.post("Phrase " .. v .. ": OFF")
 			
 		end
 		
