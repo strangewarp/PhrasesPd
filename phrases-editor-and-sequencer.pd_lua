@@ -454,7 +454,7 @@ function Phrases:shiftVolumeVal(val)
 		-- Update the relevant transference sub-button in the grid GUI
 		local xtr, ytr = keyToCoords(self.key, self.gridx, self.gridy, 1, 0)
 		local trbut = ytr .. "-" .. xtr .. "-grid-"
-		if rangeCheck(self.channel, 1, 9) then
+		if rangeCheck(self.trpoint, 1, 9) then
 			if self.phrase[self.key].transfer[self.trpoint] > 0 then
 				self:outlet(5, "list", rgbOutList(trbut .. "sub-" .. self.channel, self.color[8][3], self.color[8][3]))
 			else
@@ -761,12 +761,7 @@ function Phrases:updateChannelButton()
 		chbmessage = "Chan " .. self.channel
 	elseif self.inputmode == "tr" then
 		chbcolor = self.color[1][1]
-		chbmessage = "Tr: "
-		if rangeCheck(self.trpoint, 1, 10) then
-			chbmessage = chbmessage .. trnames[self.trpoint]
-		else
-			chbmessage = chbmessage .. "N/A"
-		end
+		chbmessage = "Tr: " .. trnames[self.trpoint]
 	elseif self.inputmode == "adc" then
 		chbcolor = self.color[1][1]
 		chbmessage = "ADC: "
