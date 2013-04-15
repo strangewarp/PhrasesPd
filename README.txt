@@ -102,7 +102,7 @@ Page down - PageDown
 
 Toggle Recording/Play modes - Esc
 Toggle between input panels - Insert
-Toggle between number/pitch views - Enter
+Toggle between number/pitch views - Shift-M
 Toggle between MIDI Catch modes - Shift-O, Shift-P
 
 Insert MIDI command - zsxdcvgbhnjm,lq2w3er5t6y7ui9o0p

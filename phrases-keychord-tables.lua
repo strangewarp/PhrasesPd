@@ -154,7 +154,8 @@ return {
 	},
 	
 	VIEW_MODE_TOGGLE = {
-		"Return",
+		"Shift",
+		"M",
 	},
 	
 	NOTE_PREVPAGE = {
