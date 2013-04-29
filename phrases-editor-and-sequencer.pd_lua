@@ -444,7 +444,7 @@ function Phrases:shiftVolumeVal(val)
 	elseif self.inputmode == "tr" then
 	
 		if rangeCheck(self.trpoint, 1, 9) then
-			self.phrase[self.key].transfer[self.trpoint] = math.max(0, self.phrase[self.key].transfer[self.trpoint] + val)
+			self.phrase[self.key].transfer[self.trpoint] = math.min(255, math.max(0, self.phrase[self.key].transfer[self.trpoint] + val))
 			pd.post("Phrase " .. self.key .. ": Set transference direction " .. self.channel .. " to strength " .. self.phrase[self.key].transfer[self.trpoint])
 		elseif self.trpoint == 10 then
 			self.phrase[self.key].transfer[10] = (self.phrase[self.key].transfer[10] + 1) % 2
@@ -456,9 +456,9 @@ function Phrases:shiftVolumeVal(val)
 		local trbut = ytr .. "-" .. xtr .. "-grid-"
 		if rangeCheck(self.trpoint, 1, 9) then
 			if self.phrase[self.key].transfer[self.trpoint] > 0 then
-				self:outlet(5, "list", rgbOutList(trbut .. "sub-" .. self.channel, self.color[8][3], self.color[8][3]))
+				self:outlet(5, "list", rgbOutList(trbut .. "sub-" .. self.trpoint, self.color[8][3], self.color[8][3]))
 			else
-				self:outlet(5, "list", rgbOutList(trbut .. "sub-" .. self.channel, self.color[8][2], self.color[8][2]))
+				self:outlet(5, "list", rgbOutList(trbut .. "sub-" .. self.trpoint, self.color[8][2], self.color[8][2]))
 			end
 		end
 		
@@ -2558,7 +2558,7 @@ function Phrases:in_7_list(s)
 	-- table.concat() is necessary, because Pd will interpret paths that contain spaces as lists
 	self.loadname = table.concat(s, " ")
 	pd.post("Current loadfile name is now: " .. self.loadname)
-	pd.post("Note: Data has NOT been loaded! To load this loadfile, press: Shift-Esc-Enter")
+	pd.post("Note: Data has NOT been loaded! To load this loadfile, press: Shift-Tab-Enter")
 end
 
 -- Get savefile name
