@@ -2473,20 +2473,25 @@ function Phrases:in_5_bang()
 		self:outlet(3, "list", {trax, tray, 1})
 		self:outlet(5, "list", rgbOutList(tray .. "-" .. trax .. "-grid-button", self.color[5][1], self.color[5][1]))
 		
-		pd.post("Phrase " .. k .. ": ON")
-		
 		-- Clean up the GUI of the phrase whose activity caused the transference in the first place
 		if k ~= trnew then
-			local txold, tyold = keyToCoords(k, self.gridx, self.gridy, 1, 0)
-			local oldbutton = tyold .. "-" .. txold .. "-grid-"
-			self:outlet(3, "list", {txold, tyold, 0})
-			self:outlet(4, "list", {txold, tyold, 0}) -- Override any blink commands that might lay a half-tick out in Pd
-			self:outlet(5, "list", rgbOutList(oldbutton .. "button", self.color[8][2], self.color[8][2]))
-			for i = 1, 9 do -- Clear transference sub-buttons
-				if self.phrase[k].transfer[i] > 0 then
-					self:outlet(5, "list", rgbOutList(oldbutton .. "sub-" .. i, self.color[8][3], self.color[8][3]))
+		
+			if self.phrase[k].transfer[10] == 0 then -- Only blank out the old phrase's GUI panel if its transference is self-terminating
+				local txold, tyold = keyToCoords(k, self.gridx, self.gridy, 1, 0)
+				local oldbutton = tyold .. "-" .. txold .. "-grid-"
+				self:outlet(3, "list", {txold, tyold, 0})
+				self:outlet(4, "list", {txold, tyold, 0}) -- Override any blink commands that might lay a half-tick out in Pd
+				self:outlet(5, "list", rgbOutList(oldbutton .. "button", self.color[8][2], self.color[8][2]))
+				for i = 1, 9 do -- Clear transference sub-buttons
+					if self.phrase[k].transfer[i] > 0 then
+						self:outlet(5, "list", rgbOutList(oldbutton .. "sub-" .. i, self.color[8][3], self.color[8][3]))
+					end
 				end
 			end
+			
+			pd.post("Phrase " .. k .. ": TRANSFER")
+			pd.post("Phrase " .. trnew .. ": ON")
+			
 		end
 		
 	end
