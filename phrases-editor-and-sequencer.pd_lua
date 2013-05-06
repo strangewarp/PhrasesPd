@@ -419,11 +419,7 @@ function Phrases:iterate(k)
 			
 		end
 		
-	until (self.phrase[k].notes[oldp][1] == -1)
-	or (
-		(self.phrase[k].transfer[10] == 0)
-		and (oldp == #self.phrase[k].notes)
-	)
+	until self.phrase[k].notes[oldp][1] == -1
 	
 	self.phrase[k].pointer = p
 	self.phrase[k].tick = tick
@@ -2420,11 +2416,31 @@ function Phrases:in_5_bang()
 	end
 	self:outlet(5, "list", rgbOutList("phrases-grid-gate-button", rgbgate, self.color[8][1]))
 	
-	-- Clear the MIDI sustains from any phrases whose transference was self-terminating on the previous tick
+	-- Clear the MIDI sustains and internal variables from any phrases whose transference was self-terminating on the previous tick
 	for _, v in pairs(self.trhalts) do
+	
 		self:haltPhraseMidi(v)
+		
+		self.phrase[v].active = false
+		self.phrase[v].pointer = 1
+		self.phrase[v].tick = 1
+		
+		-- Blank out the halting phrase's GUI presence
+		local txold, tyold = keyToCoords(v, self.gridx, self.gridy, 1, 0)
+		local oldbutton = tyold .. "-" .. txold .. "-grid-"
+		self:outlet(3, "list", {txold, tyold, 0})
+		self:outlet(4, "list", {txold, tyold, 0}) -- Override any blink commands that might lay a half-tick out in Pd
+		self:outlet(5, "list", rgbOutList(oldbutton .. "button", self.color[8][2], self.color[8][2]))
+		for i = 1, 9 do -- Clear transference sub-buttons
+			if self.phrase[v].transfer[i] > 0 then
+				self:outlet(5, "list", rgbOutList(oldbutton .. "sub-" .. i, self.color[8][3], self.color[8][3]))
+			end
+		end
+		
 		pd.post("Phrase " .. v .. ": OFF")
+		
 	end
+	
 	self.trhalts = {}
 	
 	-- On every tick, do things to every active phrase
@@ -2469,6 +2485,11 @@ function Phrases:in_5_bang()
 		self.phrase[trnew].tick = 1
 		self.phrase[trnew].tdir = calcTransference(self.phrase[trnew].transfer)
 		
+		-- Recalculate the original phrase's transference direction, if it is still active
+		if self.phrase[k].transfer[10] == 1 then
+			self.phrase[k].tdir = calcTransference(self.phrase[k].transfer)
+		end
+		
 		local trax, tray = keyToCoords(trnew, self.gridx, self.gridy, 1, 0)
 		self:outlet(3, "list", {trax, tray, 1})
 		self:outlet(5, "list", rgbOutList(tray .. "-" .. trax .. "-grid-button", self.color[5][1], self.color[5][1]))
@@ -2476,19 +2497,6 @@ function Phrases:in_5_bang()
 		-- Clean up the GUI of the phrase whose activity caused the transference in the first place
 		if k ~= trnew then
 		
-			if self.phrase[k].transfer[10] == 0 then -- Only blank out the old phrase's GUI panel if its transference is self-terminating
-				local txold, tyold = keyToCoords(k, self.gridx, self.gridy, 1, 0)
-				local oldbutton = tyold .. "-" .. txold .. "-grid-"
-				self:outlet(3, "list", {txold, tyold, 0})
-				self:outlet(4, "list", {txold, tyold, 0}) -- Override any blink commands that might lay a half-tick out in Pd
-				self:outlet(5, "list", rgbOutList(oldbutton .. "button", self.color[8][2], self.color[8][2]))
-				for i = 1, 9 do -- Clear transference sub-buttons
-					if self.phrase[k].transfer[i] > 0 then
-						self:outlet(5, "list", rgbOutList(oldbutton .. "sub-" .. i, self.color[8][3], self.color[8][3]))
-					end
-				end
-			end
-			
 			pd.post("Phrase " .. k .. ": TRANSFER")
 			pd.post("Phrase " .. trnew .. ": ON")
 			
