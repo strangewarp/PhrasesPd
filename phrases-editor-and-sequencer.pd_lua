@@ -408,12 +408,14 @@ function Phrases:iterate(k)
 			p = 1
 			tick = 1
 			
-			-- Insert a transference command into the tick's transference table
-			self.trqueue[k] = self.phrase[k].tdir
+			if self.phrase[k].tdir ~= 5 then -- Insert a transference command into the tick's transference table
+				self.trqueue[k] = self.phrase[k].tdir
+			else -- Recalculate the transference direction of every stationary phrase, as it wouldn't otherwise by done by the trqueue iterations
+				self.phrase[k].tdir = calcTransference(self.phrase[k].transfer)
+			end
 			
-			-- Halt activity on all self-terminating phrases
+			-- Slate all self-terminating phrases for termination
 			if self.phrase[k].transfer[10] == 0 then
-				self.phrase[k].active = false
 				table.insert(self.trhalts, k)
 			end
 			
@@ -2443,6 +2445,34 @@ function Phrases:in_5_bang()
 	
 	self.trhalts = {}
 	
+	-- Apply the transference matrix to every key-direction pair in the transference queue, and then activate those phrases
+	for k, v in pairs(self.trqueue) do
+		
+		local trnew = self.matrix[k][v]
+		
+		self.phrase[trnew].active = true
+		self.phrase[trnew].pointer = 1
+		self.phrase[trnew].tick = 1
+		self.phrase[trnew].tdir = calcTransference(self.phrase[trnew].transfer)
+		
+		-- Recalculate the original phrase's transference direction, if it is still active
+		if self.phrase[k].transfer[10] == 1 then
+			self.phrase[k].tdir = calcTransference(self.phrase[k].transfer)
+		end
+		
+		local trax, tray = keyToCoords(trnew, self.gridx, self.gridy, 1, 0)
+		self:outlet(3, "list", {trax, tray, 1})
+		self:outlet(5, "list", rgbOutList(tray .. "-" .. trax .. "-grid-button", self.color[5][1], self.color[5][1]))
+		
+		if k ~= trnew then
+			pd.post("Phrase " .. k .. ": TRANSFER")
+			pd.post("Phrase " .. trnew .. ": ON")
+		end
+		
+	end
+	
+	self.trqueue = {}
+
 	-- On every tick, do things to every active phrase
 	for k, v in ipairs(self.phrase) do
 	
@@ -2475,37 +2505,6 @@ function Phrases:in_5_bang()
 		
 	end
 	
-	-- Apply the transference matrix to every key-direction pair in the transference queue, and then activate those phrases
-	for k, v in pairs(self.trqueue) do
-		
-		local trnew = self.matrix[k][v]
-		
-		self.phrase[trnew].active = true
-		self.phrase[trnew].pointer = 1
-		self.phrase[trnew].tick = 1
-		self.phrase[trnew].tdir = calcTransference(self.phrase[trnew].transfer)
-		
-		-- Recalculate the original phrase's transference direction, if it is still active
-		if self.phrase[k].transfer[10] == 1 then
-			self.phrase[k].tdir = calcTransference(self.phrase[k].transfer)
-		end
-		
-		local trax, tray = keyToCoords(trnew, self.gridx, self.gridy, 1, 0)
-		self:outlet(3, "list", {trax, tray, 1})
-		self:outlet(5, "list", rgbOutList(tray .. "-" .. trax .. "-grid-button", self.color[5][1], self.color[5][1]))
-		
-		-- Clean up the GUI of the phrase whose activity caused the transference in the first place
-		if k ~= trnew then
-		
-			pd.post("Phrase " .. k .. ": TRANSFER")
-			pd.post("Phrase " .. trnew .. ": ON")
-			
-		end
-		
-	end
-	
-	self.trqueue = {}
-
 	self.tick = self.tick + 1
 	
 end
