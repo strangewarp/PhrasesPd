@@ -322,4 +322,40 @@ return {
 		"S",
 	},
 	
+	SET_COPY_POINT_1 = {
+		"Shift",
+		"Tab",
+		"!",
+	},
+	
+	SET_COPY_POINT_2 = {
+		"Shift",
+		"Tab",
+		"@",
+	},
+	
+	UNSET_COPY_POINTS = {
+		"Shift",
+		"Tab",
+		"#",
+	},
+	
+	CUT = {
+		"Shift",
+		"Tab",
+		"X",
+	},
+	
+	COPY = {
+		"Shift",
+		"Tab",
+		"C",
+	},
+	
+	PASTE = {
+		"Shift",
+		"Tab",
+		"V",
+	},
+	
 }

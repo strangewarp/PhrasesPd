@@ -112,6 +112,13 @@ Delete note - Delete
 Undo - Shift-Tab-Z
 Redo - Shift-Tab-Y
 
+Set Copy Range Top - Shift-Tab-!
+Set Copy Range Bottom - Shift-Tab-@
+Unset Copy Range - Shift-Tab-#
+Cut - Shift-Tab-X
+Copy - Shift-Tab-C
+Paste - Shift-Tab-V
+
 Increase spacing - Shift-Up arrow
 Decrease spacing - Shift-Down arrow
 

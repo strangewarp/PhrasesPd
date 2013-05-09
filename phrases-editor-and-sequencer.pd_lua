@@ -508,7 +508,7 @@ function Phrases:updateNoteButton(cellx, celly, k, p) -- editor x pointer, edito
 		p = ((p - 1) % notenum) + 1
 	end
 	
-	local notey = celly - offsety + 1 -- All inactive notes are stationary
+	local notey = (celly - offsety) + 1 -- All inactive notes are stationary
 	if cellx == offsetx then -- All notes in the active phrase follow the pointer
 		notey = (celly + p) - offsety
 	end
@@ -648,6 +648,32 @@ function Phrases:updateNoteButton(cellx, celly, k, p) -- editor x pointer, edito
 		if ((htick - 1) % self.gate) == 0 then -- For all notes that fall on the global gate value, use bright colors
 			cvals = col[3]
 			mcvals = self.color[4][3]
+		end
+		
+		if cellx == offsetx then -- On the active phrase, replace some regular colors with copypaste colors, if the copypaste variables are active
+		
+			if (
+				(self.copystart ~= nil)
+				and (notey == self.copystart)
+			) or (
+				(self.copyend ~= nil)
+				and (notey == self.copyend)
+			)
+			then -- Assign gaudy color values to the upper and lower bounds of the copypaste selection area
+			
+				cvals = self.color[2][1]
+				mcvals = self.color[1][1]
+				
+			elseif (self.copystart ~= nil)
+			and (self.copyend ~= nil)
+			and (notey > self.copystart)
+			and (notey < self.copyend)
+			then -- Reverse color values for all notes within the copypaste selection area
+			
+				cvals, mcvals = mcvals, cvals
+				
+			end
+			
 		end
 		
 		if celly == offsety then -- Reverse color values on the active row
@@ -1026,6 +1052,27 @@ end
 
 
 
+-- Adjust the copypaste variables to fall within the boundaries of the currently active phrase's notes
+function Phrases:adjustCopyRange()
+
+	if (self.copystart ~= nil)
+	and (#self.phrase[self.key].notes < self.copystart)
+	then
+		self.copystart = #self.phrase[self.key].notes
+		pd.post("Copy Range: Start Moved: " .. self.copystart)
+	end
+	
+	if (self.copyend ~= nil)
+	and (#self.phrase[self.key].notes < self.copyend)
+	then
+		self.copyend = #self.phrase[self.key].notes
+		pd.post("Copy Range: End Moved: " .. self.copystart)
+	end
+	
+end
+
+
+
 function Phrases:setDefaultNotes(p)
 
 	if self.phrase[p] == nil then
@@ -1171,6 +1218,10 @@ function Phrases:initialize(sel, atoms)
 	
 	self.history = {{self.phrase, self.key, self.pointer}} -- Table for holding previous states of the editor, for undo/redo purposes
 	self.undopoint = 1 -- Tracks the current undo location in the history table
+	
+	self.copystart = nil -- Start of the cut/copy selection area. Nil when not in use.
+	self.copyend = nil -- End of the cut/copy selection area. Nil when not in use.
+	self.copytab = {} -- Table to hold an arbitrary series of notes that has been cut or copied.
 	
 	return true
 	
@@ -1367,6 +1418,10 @@ function Phrases:in_1_list(list)
 			self.key = 1
 			self.pointer = 1
 			self.adcpoint = 1
+			
+			-- Reset the copypaste positions, but NOT the copypaste table
+			self.copystart = nil
+			self.copyend = nil
 
 			-- Remove the previous file's information from the old history table, and replace it with the new file's initial state
 			self:replaceOldHistory()
@@ -1493,6 +1548,8 @@ function Phrases:in_1_list(list)
 				end
 			end
 			
+			self:adjustCopyRange()
+	
 			self:updateEditorGUI()
 		
 		end
@@ -1517,6 +1574,8 @@ function Phrases:in_1_list(list)
 				end
 			end
 			
+			self:adjustCopyRange()
+	
 			self:updateEditorGUI()
 		
 		end
@@ -1620,6 +1679,8 @@ function Phrases:in_1_list(list)
 				do break end
 			end
 		end
+		
+		self:adjustCopyRange()
 		
 		self:updateEditorGUI()
 		pd.post("Active phrase: " .. self.key)
@@ -1790,6 +1851,8 @@ function Phrases:in_1_list(list)
 				-- Update the active phrase's display-value hash
 				self.phrase[self.key].dhash = makeDisplayValHash(self.phrase[self.key].notes)
 				
+				self:adjustCopyRange()
+		
 				self:addStateToHistory()
 
 				self:updateEditorGUI()
@@ -2210,6 +2273,182 @@ function Phrases:in_1_list(list)
 			
 		end
 		
+	elseif cmd == "SET_COPY_POINT_1" then -- Set the top copy point
+	
+		if self.recording == true then
+	
+			-- If the bottom copy point is above the pointer, set it to the current pointer position
+			if (self.copyend ~= nil)
+			and (self.copyend < self.pointer)
+			then
+				self.copyend = self.pointer
+				pd.post("Copy Range: Reset End: " .. self.copyend)
+			end
+			
+			if (self.copystart ~= nil)
+			and (self.copystart == self.pointer)
+			then -- If this is invoked on the top copy point's current position, then unset it
+				self.copystart = nil
+			else -- Else set the top copy point to the current pointer location
+				self.copystart = self.pointer
+			end
+			
+			pd.post("Copy Range: Set Start: " .. self.copystart)
+			
+			self:updateEditorGUI()
+			
+		end
+		
+	elseif cmd == "SET_COPY_POINT_2" then -- Set the bottom copy point
+	
+		if self.recording == true then
+	
+			-- If the top copy point is below the pointer, set it to the current pointer position
+			if (self.copystart ~= nil)
+			and (self.copystart > self.pointer)
+			then
+				self.copystart = self.pointer
+				pd.post("Copy Range: Reset Start: " .. self.copystart)
+			end
+		
+			if (self.copyend ~= nil)
+			and (self.copyend == self.pointer)
+			then -- If this is invoked on the bottom copy point's current position, then unset it
+				self.copyend = nil
+			else -- Else set thebottom opy point to the current pointer location
+				self.copyend = self.pointer
+			end
+			
+			pd.post("Copy Range: Set End: " .. self.copyend)
+			
+			self:updateEditorGUI()
+			
+		end
+		
+	elseif cmd == "UNSET_COPY_POINTS" then -- Unset the copy points, if either of them is set
+	
+		if self.recording == true then
+			
+			if (self.copystart ~= nil)
+			or (self.copyend ~= nil)
+			then
+			
+				self.copystart = nil
+				self.copyend = nil
+				
+				pd.post("Unset Copy Range")
+				
+				self:updateEditorGUI()
+				
+			end
+			
+		end
+	
+	elseif cmd == "CUT" then -- Remove the notes from within the copy-range on the active phrase, and transfer them into the copy table
+	
+		if self.recording == true then
+	
+			if (self.copystart ~= nil)
+			and (self.copyend ~= nil)
+			then
+			
+				self.copytab = {} -- Clear old copy data, if there was any
+				
+				-- Check whether the entirety of the phrase's contents will be cut
+				local replaceflag = false
+				if (self.copystart == 1)
+				and (self.copyend == #self.phrase[self.key].notes)
+				then
+					replaceflag = true
+				end
+				
+				-- Move notes from the active phrase to the copy table, deleting them from the phrase along the way
+				for i = self.copystart, self.copyend do
+					table.insert(self.copytab, table.remove(self.phrase[self.key].notes, self.copystart))
+				end
+				
+				-- If the phrase's contents were completely cut, then insert a halting tick, to prevent errors
+				if replaceflag == true then
+					self.phrase[self.key].notes = {{-1}}
+				end
+				
+				-- Reset the pointer's position if it is now greater than the size of the phrase
+				if self.pointer > #self.phrase[self.key].notes then
+					self.pointer = #self.phrase[self.key].notes
+				end
+				
+				pd.post("Cut selection: items " .. self.copystart .. " to " .. self.copyend)
+				
+				-- Unset the copy positions, as they will have either been removed by the cut, or shifted on top of irrelevant notes
+				self.copystart = nil
+				self.copyend = nil
+				
+				-- Update the active phrase's display-value hash
+				self.phrase[self.key].dhash = makeDisplayValHash(self.phrase[self.key].notes)
+				
+				self:adjustCopyRange()
+		
+				self:addStateToHistory()
+
+				self:updateEditorGUI()
+				
+			else
+				pd.post("Could not cut: copy range is undefined!")
+			end
+			
+		end
+	
+	elseif cmd == "COPY" then -- Copy the notes within the copy-range into the copy table
+	
+		if self.recording == true then
+		
+			if (self.copystart ~= nil)
+			and (self.copyend ~= nil)
+			then
+			
+				self.copytab = {} -- Clear old copy data, if there was any
+				
+				-- Copy notes from the active phrase to the copy table, non-destructively
+				for i = self.copystart, self.copyend do
+					table.insert(self.copytab, self.phrase[self.key].notes[i])
+				end
+		
+				pd.post("Copied selection: items " .. self.copystart .. " to " .. self.copyend)
+		
+			else
+				pd.post("Could not copy: copy range is undefined!")
+			end
+			
+		end
+	
+	elseif cmd == "PASTE" then -- Paste the notes within the copy table into the active phrase, at the current pointer position
+	
+		if self.recording == true then
+		
+			if #self.copytab > 0 then
+		
+				-- Duplicate the copytable's contents into the active phrase, at the current pointer location
+				for k, v in ipairs(self.copytab) do
+					table.insert(self.phrase[self.key].notes, self.pointer + (k - 1), v)
+				end
+				
+				pd.post("Pasted " .. #self.copytab .. " items at point " .. self.pointer)
+				
+				-- Update the active phrase's display-value hash
+				self.phrase[self.key].dhash = makeDisplayValHash(self.phrase[self.key].notes)
+				
+				self:adjustCopyRange()
+		
+				self:addStateToHistory()
+
+				self:updateEditorGUI()
+				
+			else
+				pd.post("Could not paste: copy table is empty!")
+			end
+			
+		end
+	
 	elseif cmd == "UPDATE_EDITOR_GUI" then -- Trigger an update in the editor GUI window
 	
 		self:updateEditorGUI()
@@ -2323,6 +2562,8 @@ function Phrases:in_3_list(k)
 	
 			self:outlet(4, "list", {k[1], k[2], 0}) -- Send a blink command for the phrase's Monome button
 
+			self:adjustCopyRange()
+	
 			self:updateEditorGUI()
 
 		end
