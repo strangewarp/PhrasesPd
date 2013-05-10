@@ -1,6 +1,52 @@
 
 return {
 
+	LOAD = {
+		"Shift",
+		"Tab",
+		"Return",
+	},
+	
+	SAVE = {
+		"Shift",
+		"?",
+		"|",
+	},
+	
+	RECORD = {
+		"Escape",
+	},
+	
+	UNDO = {
+		"Shift",
+		"Tab",
+		"Z",
+	},
+	
+	REDO = {
+		"Shift",
+		"Tab",
+		"Y",
+	},
+	
+	CUT = {
+		"Shift",
+		"Tab",
+		"X",
+	},
+	
+	COPY = {
+		"Shift",
+		"Tab",
+		"C",
+	},
+	
+	PASTE = {
+		"Shift",
+		"Tab",
+		"V",
+	},
+	
 	LOAD_HOTSEAT_1 = {
 		"Shift",
 		"!",
@@ -109,34 +155,6 @@ return {
 		"Shift",
 		"BackSpace",
 		")",
-	},
-	
-	LOAD = {
-		"Shift",
-		"Tab",
-		"Return",
-	},
-	
-	SAVE = {
-		"Shift",
-		"?",
-		"|",
-	},
-	
-	RECORD = {
-		"Escape",
-	},
-	
-	UNDO = {
-		"Shift",
-		"Tab",
-		"Z",
-	},
-	
-	REDO = {
-		"Shift",
-		"Tab",
-		"Y",
 	},
 	
 	MIDI_CATCHTYPE_BACK = {
@@ -310,6 +328,30 @@ return {
 		"V",
 	},
 	
+	SHIFT_PHRASE_UP = {
+		"Shift",
+		"Tab",
+		"Up",
+	},
+	
+	SHIFT_PHRASE_LEFT = {
+		"Shift",
+		"Tab",
+		"Left",
+	},
+	
+	SHIFT_PHRASE_RIGHT = {
+		"Shift",
+		"Tab",
+		"Right",
+	},
+	
+	SHIFT_PHRASE_DOWN = {
+		"Shift",
+		"Tab",
+		"Down",
+	},
+	
 	ADD_NOTE_OFFS_AUTO = {
 		"Shift",
 		"Tab",
@@ -338,24 +380,6 @@ return {
 		"Shift",
 		"Tab",
 		"#",
-	},
-	
-	CUT = {
-		"Shift",
-		"Tab",
-		"X",
-	},
-	
-	COPY = {
-		"Shift",
-		"Tab",
-		"C",
-	},
-	
-	PASTE = {
-		"Shift",
-		"Tab",
-		"V",
 	},
 	
 }

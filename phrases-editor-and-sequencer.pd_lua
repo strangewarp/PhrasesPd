@@ -950,6 +950,24 @@ function Phrases:setupGridGUI()
 
 end
 
+-- Refresh the transference sub-buttons in the grid GUI
+function Phrases:refreshSubButtons()
+
+	for x = 0, self.gridx - 1 do
+		for y = 0, self.gridy - 1 do
+			local subkey = coordsToKey(x, y, self.gridx, self.gridy, 0, 1)
+			for i = 1, 9 do
+				if self.phrase[subkey].transfer[i] > 0 then
+					self:outlet(5, "list", rgbOutList(y .. "-" .. x .. "-grid-sub-" .. i, self.color[8][3], self.color[8][3]))
+				else
+					self:outlet(5, "list", rgbOutList(y .. "-" .. x .. "-grid-sub-" .. i, self.color[8][2], self.color[8][2]))
+				end
+			end
+		end
+	end
+	
+end
+
 
 
 -- Inserts an OFF-note at the location of the pointer, if there is at least one other ON-note on the same MIDI channel at any point in the phrase.
@@ -1373,19 +1391,8 @@ function Phrases:in_1_list(list)
 					
 					end
 
-					-- Show the correct neutral transference sub-buttons in the grid GUI for a freshly loaded phrase
-					for x = 0, self.gridx - 1 do
-						for y = 0, self.gridy - 1 do
-							local subkey = coordsToKey(x, y, self.gridx, self.gridy, 0, 1)
-							for i = 1, 9 do
-								if self.phrase[subkey].transfer[i] > 0 then
-									self:outlet(5, "list", rgbOutList(y .. "-" .. x .. "-grid-sub-" .. i, self.color[8][3], self.color[8][3]))
-								else
-									self:outlet(5, "list", rgbOutList(y .. "-" .. x .. "-grid-sub-" .. i, self.color[8][2], self.color[8][2]))
-								end
-							end
-						end
-					end
+					-- Display the correct transference sub-buttons for a freshly loaded phrase
+					self:refreshSubButtons()
 
 				else
 					self[k] = v -- Set global non-phrase variables
@@ -1550,6 +1557,8 @@ function Phrases:in_1_list(list)
 			
 			self:adjustCopyRange()
 	
+			self:refreshSubButtons()
+	
 			self:updateEditorGUI()
 		
 		end
@@ -1575,7 +1584,9 @@ function Phrases:in_1_list(list)
 			end
 			
 			self:adjustCopyRange()
-	
+			
+			self:refreshSubButtons()
+			
 			self:updateEditorGUI()
 		
 		end
@@ -2044,7 +2055,7 @@ function Phrases:in_1_list(list)
 			
 		end
 	
-	elseif (cmd:sub(1, 14) == "SHIFT_VELOCITY") then -- Shift the velocity byte at the pointer up or down by 1 or 10 spaces
+	elseif cmd:sub(1, 14) == "SHIFT_VELOCITY" then -- Shift the velocity byte at the pointer up or down by 1 or 10 spaces
 	
 		if self.recording == true then
 		
@@ -2062,6 +2073,40 @@ function Phrases:in_1_list(list)
 			
 			self:addStateToHistory()
 
+			self:updateEditorGUI()
+			
+		end
+		
+	elseif cmd:sub(1, 12) == "SHIFT_PHRASE" then -- Move the active phrase to a new position, switching it with the phrase that currently exists there
+	
+		if self.recording == true then
+		
+			local oldkey = self.key
+			local newkey = oldkey
+		
+			if cmd == "SHIFT_PHRASE_UP" then
+				newkey = self.matrix[oldkey][2]
+			elseif cmd == "SHIFT_PHRASE_LEFT" then
+				newkey = self.matrix[oldkey][4]
+			elseif cmd == "SHIFT_PHRASE_RIGHT" then
+				newkey = self.matrix[oldkey][6]
+			elseif cmd == "SHIFT_PHRASE_DOWN" then
+				newkey = self.matrix[oldkey][8]
+			end
+			
+			local phrasetemp = deepCopy(self.phrase[oldkey], {})
+			self.phrase[oldkey] = deepCopy(self.phrase[newkey], {})
+			self.phrase[newkey] = deepCopy(phrasetemp, {})
+			
+			self.key = newkey
+			
+			pd.post("Switched the positions of phrases " .. oldkey .. " and " .. newkey)
+			pd.post("Active phrase: " .. self.key)
+		
+			self:addStateToHistory()
+
+			self:refreshSubButtons()
+			
 			self:updateEditorGUI()
 			
 		end

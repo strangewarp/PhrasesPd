@@ -91,10 +91,10 @@ Keystroke Panic (because current keychord detection is fallible): Space
 Toggle between phrases - Any Monome button (while in REC mode)
 Play phrase - Any Monome button (while in PLAY mode)
 
-Previous phrase - Left arrow
-Next phrase - Right arrow
-Previous note - Up arrow
-Next note - Down arrow
+Previous phrase - Left
+Next phrase - Right
+Previous note - Up
+Next note - Down
 First note - Home
 Inverse note - End
 Page up - PageUp
@@ -119,8 +119,13 @@ Cut - Shift-Tab-X
 Copy - Shift-Tab-C
 Paste - Shift-Tab-V
 
-Increase spacing - Shift-Up arrow
-Decrease spacing - Shift-Down arrow
+Shift phrase up - Shift-Tab-Up
+Shift phrase down - Shift-Tab-Down
+Shift phrase left - Shift-Tab-Left
+Shift phrase right - Shift-Tab-Right
+
+Increase spacing - Shift-Up
+Decrease spacing - Shift-Down
 
 Increase MIDI channel - '
 Decrease MIDI channel - ;
