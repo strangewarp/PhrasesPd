@@ -2451,12 +2451,14 @@ function Phrases:in_1_list(list)
 			and (self.copyend ~= nil)
 			then
 			
-				self.copytab = {} -- Clear old copy data, if there was any
+				local temptab = {}
 				
-				-- Copy notes from the active phrase to the copy table, non-destructively
+				-- Copy the notes from the active selection to temptab, non-destructively
 				for i = self.copystart, self.copyend do
-					table.insert(self.copytab, self.phrase[self.key].notes[i])
+					table.insert(temptab, self.phrase[self.key].notes[i])
 				end
+				
+				self.copytab = deepCopy(temptab, {}) -- Transfer data from temptab to self.copytab with deepCopy, to ensure an actual table is copied, rather than a reference
 		
 				pd.post("Copied selection: items " .. self.copystart .. " to " .. self.copyend)
 		
