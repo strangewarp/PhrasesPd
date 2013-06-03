@@ -2235,12 +2235,14 @@ function Phrases:in_1_list(list)
 		
 		if self.recording == true then
 		
-			if self.spacing > 0 then
+			if (self.spacing > 0)
+			and (self.spacing <= self.phrase[self.key].dhash[#self.phrase[self.key].notes]) -- Refuse the command if spacing is greater than the number of notes
+			then
 		
 				-- Convert the pointer from the active note to its corresponding tick
 				local oldp = self.phrase[self.key].dhash[self.pointer]
 				
-				local tempnotes = self.phrase[self.key].notes
+				local tempnotes = deepCopy(self.phrase[self.key].notes, {})
 				
 				local i = 1
 				while i <= #tempnotes do -- Use a while loop instead of a for loop, because for doesn't track changes that happen to the limiting value of #tempnotes
@@ -2250,42 +2252,32 @@ function Phrases:in_1_list(list)
 					if rangeCheck(note[1], 144, 159) then
 					
 						local spaces = 0
-						local inpoint = (i % #tempnotes) + 1
+						local cycle = 0
+						local inpoint = ((i - 1) % #tempnotes) + 1
+						local oldpoint = inpoint
 						
-						-- Increase the insert-point until it reaches the number of halting notes specified by self.spacing
-						while spaces < self.spacing do
+						-- Increase the insert-point until it passes the number of halting notes specified by self.spacing
+						while (spaces < self.spacing)
+						and (cycle <= #tempnotes) -- Break the loop if there are no halting notes due to user error
+						do
 						
 							if tempnotes[inpoint][1] == -1 then
 								spaces = spaces + 1
 							end
 							
-							if (inpoint + 1) > #tempnotes then
-								inpoint = 1
-							else
-								inpoint = inpoint + 1
-							end
-
+							inpoint = (inpoint % #tempnotes) + 1
+							cycle = cycle + 1
+							
 						end
 						
-						-- Decrease the insert-point until it precedes all the tick's noteons.
-						-- If there are no halting notes in the phrase due to user error, searching is cut short after a full cycle.
-						local prevpoint = inpoint
-						local cycle = 0
-						repeat
-							inpoint = prevpoint
-							prevpoint = prevpoint - 1
-							if prevpoint == 0 then
-								prevpoint = #tempnotes
-							end
-							cycle = cycle + 1
-						until
-						(not(rangeCheck(tempnotes[prevpoint][1], 144, 159)))
-						or (cycle == #tempnotes)
-					
 						table.insert(tempnotes, inpoint, {note[1] - 16, note[2], note[3]})
-						i = i + 1 -- Increment i an extra time, to avoid being stuck on the noteon whose noteoff was just added
 						
-						pd.post("Added noteoff: position " .. inpoint .. ", note " .. (note[1] - 16) .. " " .. note[2] .. " " .. note[3])
+						-- If the insert point wrapped around, increase the iterator by an additional point, to prevent infinite loops of inserts from the same note-on
+						if inpoint <= oldpoint then
+							i = i + 1
+						end
+						
+						pd.post("Added noteoff: item " .. inpoint .. ", note " .. (note[1] - 16) .. " " .. note[2] .. " " .. note[3])
 					
 					end
 				
@@ -2293,7 +2285,7 @@ function Phrases:in_1_list(list)
 				
 				end
 				
-				self.phrase[self.key].notes = tempnotes
+				self.phrase[self.key].notes = deepCopy(tempnotes, {})
 				
 				-- Update the active phrase's display-value hash
 				self.phrase[self.key].dhash = makeDisplayValHash(self.phrase[self.key].notes)
@@ -2312,7 +2304,7 @@ function Phrases:in_1_list(list)
 				
 			else
 			
-				pd.post("Spacing must be greater than 0 for this command to work!")
+				pd.post("Spacing must be greater than 0, and less than the number of ticks in the phrase, for this command to work!")
 			
 			end
 			
