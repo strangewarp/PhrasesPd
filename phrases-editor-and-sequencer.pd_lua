@@ -1978,8 +1978,36 @@ function Phrases:in_1_list(list)
 			self:updateEditorGUI()
 			
 		end
+		
+	elseif cmd:sub(1, 18) == "SHIFT_ALL_CHANNELS" then -- Shift the phrase's channels up or down by 1
 	
-	elseif cmd:sub(1, 17) == "SHIFT_ALL_PITCHES" then -- Shift the phrase's notes up or down by 1 space
+		if self.recording == true then
+		
+			local shiftval = 0
+			if cmd == "SHIFT_ALL_CHANNELS_DOWN" then
+				shiftval = -1
+			elseif cmd == "SHIFT_ALL_CHANNELS_UP" then
+				shiftval = 1
+			end
+			
+			for i = 1, #self.phrase[self.key].notes do
+				local shiftbyte = self.phrase[self.key].notes[i][1]
+				if rangeCheck(shiftbyte, 128, 255) then
+					local command = shiftbyte - (shiftbyte % 16)
+					shiftbyte = (shiftbyte + shiftval) % 16
+					self.phrase[self.key].notes[i][1] = command + shiftbyte
+				end
+			end
+		
+			pd.post("Shifted all channels in phrase " .. self.key .. " by " .. shiftval .. " steps")
+			
+			self:addStateToHistory()
+
+			self:updateEditorGUI()
+			
+		end
+	
+	elseif cmd:sub(1, 17) == "SHIFT_ALL_PITCHES" then -- Shift the phrase's notes up or down by the velocity value
 	
 		if self.recording == true then
 		
@@ -2006,7 +2034,7 @@ function Phrases:in_1_list(list)
 			
 		end
 	
-	elseif cmd:sub(1, 18) == "SHIFT_ALL_VELOCITY" then -- Shift the phrase's notes up or down by 1 space
+	elseif cmd:sub(1, 18) == "SHIFT_ALL_VELOCITY" then -- Shift the phrase's notes up or down by the velocity value
 	
 		if self.recording == true then
 		
@@ -2032,8 +2060,33 @@ function Phrases:in_1_list(list)
 			self:updateEditorGUI()
 			
 		end
-	
-	elseif cmd:sub(1, 11) == "SHIFT_PITCH" then -- Shift the note byte at the pointer up or down by 1 or 12 spaces
+		
+	elseif cmd:sub(1, 13) == "SHIFT_CHANNEL" then -- Shift the channel byte at the pointer up or down by the velocity value
+		
+		if self.recording == true then
+		
+			local shiftval = 0
+			if cmd == "SHIFT_CHANNEL_DOWN" then
+				shiftval = self.velocity * -1
+			elseif cmd == "SHIFT_CHANNEL_UP" then
+				shiftval = self.velocity
+			end
+			
+			local shiftbyte = self.phrase[self.key].notes[self.pointer][1]
+			if rangeCheck(shiftbyte, 128, 255) then
+				local command = shiftbyte - (shiftbyte % 16)
+				shiftbyte = ((shiftbyte + shiftval) % 16)
+				self.phrase[self.key].notes[self.pointer][1] = command + shiftbyte
+				pd.post("Shifted channel of item " .. self.pointer .. " in phrase " .. self.key .. " to value " .. self.phrase[self.key].notes[self.pointer][2])
+			end
+			
+			self:addStateToHistory()
+
+			self:updateEditorGUI()
+			
+		end
+		
+	elseif cmd:sub(1, 11) == "SHIFT_PITCH" then -- Shift the note byte at the pointer up or down by the velocity value
 	
 		if self.recording == true then
 		
@@ -2046,7 +2099,7 @@ function Phrases:in_1_list(list)
 		
 			if self.phrase[self.key].notes[self.pointer][2] ~= nil then
 				self.phrase[self.key].notes[self.pointer][2] = (self.phrase[self.key].notes[self.pointer][2] + shiftval) % 128
-				pd.post("Shifted byte 2 of note " .. self.pointer .. " in phrase " .. self.key .. " to value " .. self.phrase[self.key].notes[self.pointer][2])
+				pd.post("Shifted byte 2 of item " .. self.pointer .. " in phrase " .. self.key .. " to value " .. self.phrase[self.key].notes[self.pointer][2])
 			end
 		
 			self:addStateToHistory()
@@ -2055,7 +2108,7 @@ function Phrases:in_1_list(list)
 			
 		end
 	
-	elseif cmd:sub(1, 14) == "SHIFT_VELOCITY" then -- Shift the velocity byte at the pointer up or down by 1 or 10 spaces
+	elseif cmd:sub(1, 14) == "SHIFT_VELOCITY" then -- Shift the velocity byte at the pointer up or down by the velocity value
 	
 		if self.recording == true then
 		
@@ -2068,7 +2121,7 @@ function Phrases:in_1_list(list)
 		
 			if self.phrase[self.key].notes[self.pointer][3] ~= nil then
 				self.phrase[self.key].notes[self.pointer][3] = (self.phrase[self.key].notes[self.pointer][3] + shiftval) % 128
-				pd.post("Shifted byte 3 of note " .. self.pointer .. " in phrase " .. self.key .. " to value " .. self.phrase[self.key].notes[self.pointer][3])
+				pd.post("Shifted byte 3 of item " .. self.pointer .. " in phrase " .. self.key .. " to value " .. self.phrase[self.key].notes[self.pointer][3])
 			end
 			
 			self:addStateToHistory()

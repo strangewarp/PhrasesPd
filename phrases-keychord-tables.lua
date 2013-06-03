@@ -288,6 +288,16 @@ return {
 		"R",
 	},
 	
+	SHIFT_CHANNEL_DOWN = {
+		"Shift",
+		"Y",
+	},
+	
+	SHIFT_CHANNEL_UP = {
+		"Shift",
+		"T",
+	},
+	
 	SHIFT_PITCH_DOWN = {
 		"Shift",
 		"A",
@@ -306,6 +316,16 @@ return {
 	SHIFT_VELOCITY_UP = {
 		"Shift",
 		"X",
+	},
+	
+	SHIFT_ALL_CHANNELS_DOWN = {
+		"Shift",
+		"I",
+	},
+	
+	SHIFT_ALL_CHANNELS_UP = {
+		"Shift",
+		"U",
 	},
 	
 	SHIFT_ALL_PITCHES_DOWN = {
