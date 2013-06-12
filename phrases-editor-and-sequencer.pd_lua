@@ -2381,9 +2381,8 @@ function Phrases:in_1_list(list)
 				self.copystart = nil
 			else -- Else set the top copy point to the current pointer location
 				self.copystart = self.pointer
+				pd.post("Copy Range: Set Start: " .. self.copystart)
 			end
-			
-			pd.post("Copy Range: Set Start: " .. self.copystart)
 			
 			self:updateEditorGUI()
 			
@@ -2407,9 +2406,8 @@ function Phrases:in_1_list(list)
 				self.copyend = nil
 			else -- Else set thebottom opy point to the current pointer location
 				self.copyend = self.pointer
+				pd.post("Copy Range: Set End: " .. self.copyend)
 			end
-			
-			pd.post("Copy Range: Set End: " .. self.copyend)
 			
 			self:updateEditorGUI()
 			
@@ -2443,6 +2441,7 @@ function Phrases:in_1_list(list)
 			then
 			
 				self.copytab = {} -- Clear old copy data, if there was any
+				local temptab = {}
 				
 				-- Check whether the entirety of the phrase's contents will be cut
 				local replaceflag = false
@@ -2454,7 +2453,7 @@ function Phrases:in_1_list(list)
 				
 				-- Move notes from the active phrase to the copy table, deleting them from the phrase along the way
 				for i = self.copystart, self.copyend do
-					table.insert(self.copytab, table.remove(self.phrase[self.key].notes, self.copystart))
+					table.insert(temptab, table.remove(self.phrase[self.key].notes, self.copystart))
 				end
 				
 				-- If the phrase's contents were completely cut, then insert a halting tick, to prevent errors
@@ -2466,6 +2465,8 @@ function Phrases:in_1_list(list)
 				if self.pointer > #self.phrase[self.key].notes then
 					self.pointer = #self.phrase[self.key].notes
 				end
+				
+				self.copytab = deepCopy(temptab, {}) -- Transfer data from temptab to self.copytab with deepCopy, to ensure an actual table is copied, rather than a reference
 				
 				pd.post("Cut selection: items " .. self.copystart .. " to " .. self.copyend)
 				
@@ -2518,11 +2519,15 @@ function Phrases:in_1_list(list)
 		if self.recording == true then
 		
 			if #self.copytab > 0 then
-		
+			
+				local tempnotes = deepCopy(self.phrase[self.key].notes, {})
+				
 				-- Duplicate the copytable's contents into the active phrase, at the current pointer location
 				for k, v in ipairs(self.copytab) do
-					table.insert(self.phrase[self.key].notes, self.pointer + (k - 1), v)
+					table.insert(tempnotes, self.pointer + (k - 1), v)
 				end
+				
+				self.phrase[self.key].notes = deepCopy(tempnotes, {}) -- Transfer data from tempnotes to the phrase, with deepCopy, to duplicate the table instead of the reference
 				
 				pd.post("Pasted " .. #self.copytab .. " items at point " .. self.pointer)
 				
